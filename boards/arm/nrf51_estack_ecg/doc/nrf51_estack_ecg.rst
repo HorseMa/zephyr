@@ -1,13 +1,13 @@
-.. _nrf51_pca10028:
+.. _nrf51_estack_ecg:
 
-nRF51-PCA10028
+nRF51-ESTACK_ECG
 ##############
 
 Overview
 ********
 
-Zephyr applications use the nrf51_pca10028 board configuration to run on the
-nRF51 Development Kit (PCA10028) hardware. It provides support for the Nordic Semiconductor
+Zephyr applications use the nrf51_estack_ecg board configuration to run on the
+nRF51 Development Kit (ESTACK_ECG) hardware. It provides support for the Nordic Semiconductor
 nRF51822 ARM Cortex-M0 CPU and the following devices:
 
 * :abbr:`NVIC (Nested Vectored Interrupt Controller)`
@@ -18,12 +18,12 @@ nRF51822 ARM Cortex-M0 CPU and the following devices:
 * RADIO (Bluetooth Low Energy)
 * Segger RTT (RTT Console)
 
-.. figure:: img/nrf51_pca10028.jpg
+.. figure:: img/nrf51_estack_ecg.jpg
      :width: 442px
      :align: center
-     :alt: nRF51 PCA10028 DK
+     :alt: nRF51 ESTACK_ECG DK
 
-     nRF51 PCA10028 DK (Credit: Nordic Semi)
+     nRF51 ESTACK_ECG DK (Credit: Nordic Semi)
 
 More information about the board can be found at the
 `nRF51 DK website`_. The `Nordic Semiconductor Infocenter`_
@@ -39,7 +39,7 @@ is 16 MHz.
 Supported Features
 ==================
 
-The nrf51_pca10028 board configuration supports the following nRF51
+The nrf51_estack_ecg board configuration supports the following nRF51
 hardware features:
 
 +-----------+------------+----------------------+
@@ -112,7 +112,7 @@ Then build and flash the application in the usual way.
 
 .. zephyr-app-commands::
    :zephyr-app: samples/hello_world
-   :board: nrf51_pca10028
+   :board: nrf51_estack_ecg
    :goals: build flash
 
 Debugging
@@ -134,7 +134,7 @@ the board are working properly with Zephyr:
    samples/basic/button
 
 You can build and flash the examples to make sure Zephyr is running correctly on
-your board. The button and LED definitions can be found in :file:`boards/arm/nrf51_pca10028/board.h`.
+your board. The button and LED definitions can be found in :file:`boards/arm/nrf51_estack_ecg/board.h`.
 
 References
 **********

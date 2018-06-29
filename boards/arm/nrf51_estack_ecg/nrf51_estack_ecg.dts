@@ -8,8 +8,8 @@
 #include <nordic/nrf51822.dtsi>
 
 / {
-	model = "Nordic PCA10028 Dev Kit";
-	compatible = "nordic,pca10028-dk", "nordic,nrf51822-qfac",
+	model = "Nordic ESTACK_ECG Dev Kit";
+	compatible = "nordic,estack_ecg-dk", "nordic,nrf51822-qfac",
 		     "nordic,nrf51822";
 
 	chosen {

@@ -1,13 +1,13 @@
-# Kconfig - nRF51 PCA10028 board configuration
+# Kconfig - nRF51 ESTACK_ECG board configuration
 #
 # Copyright (c) 2016 Linaro Limited.
 #
 # SPDX-License-Identifier: Apache-2.0
 
-if BOARD_NRF51_PCA10028
+if BOARD_NRF51_ESTACK_ECG
 
 config BOARD
-	default "nrf51_pca10028"
+	default "nrf51_estack_ecg"
 
 if GPIO_NRF5
 
@@ -32,4 +32,4 @@ config UART_0_NRF_CTS_PIN
 
 endif # UART_NRFX
 
-endif # BOARD_NRF51_PCA10028
+endif # BOARD_NRF51_ESTACK_ECG

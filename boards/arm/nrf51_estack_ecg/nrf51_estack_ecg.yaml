@@ -1,5 +1,5 @@
-identifier: nrf51_pca10028
-name: nRF51-PCA10028
+identifier: nrf51_estack_ecg
+name: nRF51-ESTACK_ECG
 type: mcu
 arch: arm
 toolchain:
