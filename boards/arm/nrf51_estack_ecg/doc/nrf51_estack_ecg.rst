@@ -71,18 +71,14 @@ Connections and IOs
 LED
 ---
 
-* LED1 (green) = P0.21
-* LED2 (green) = P0.22
-* LED3 (green) = P0.23
-* LED4 (green) = P0.24
+* LED1 (green) = P0.10
+* LED2 (green) = P0.11
 
 Push buttons
 ------------
 
-* BUTTON1 = SW1 = P0.17
-* BUTTON2 = SW2 = P0.18
-* BUTTON3 = SW3 = P0.19
-* BUTTON4 = SW4 = P0.20
+* BUTTON1 = SW1 = P0.00
+* BUTTON2 = SW2 = P0.01
 * BOOT = SW5 = boot/reset
 
 Programming and Debugging
@@ -144,3 +140,4 @@ References
 .. _nRF51 DK website: http://www.nordicsemi.com/eng/Products/nRF51-DK
 .. _Nordic Semiconductor Infocenter: http://infocenter.nordicsemi.com/
 
+cmake -GNinja -DBOARD=nrf51_estack_ecg ..

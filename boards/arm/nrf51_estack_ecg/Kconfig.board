@@ -6,4 +6,5 @@
 
 config BOARD_NRF51_ESTACK_ECG
 	bool "nRF51 ESTACK_ECG"
+	select HAS_DTS_I2C
 	depends on SOC_NRF51822_QFAC
