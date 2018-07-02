@@ -1,0 +1,4 @@
+zephyr_library()
+
+zephyr_library_sources_ifdef(CONFIG_MAX30205 max30205.c)
+zephyr_library_sources_ifdef(CONFIG_MAX30205_TRIGGER max30205_trigger.c)
