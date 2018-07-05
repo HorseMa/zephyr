@@ -20,8 +20,8 @@
 
 static struct net_if_timestamp_cb sync_timestamp_cb;
 static struct net_if_timestamp_cb pdelay_response_timestamp_cb;
-static bool ts_cb_registered;
 static bool sync_cb_registered;
+static bool ts_cb_registered;
 
 static const struct net_eth_addr gptp_multicast_eth_addr = {
 	{ 0x01, 0x80, 0xc2, 0x00, 0x00, 0x0e } };
@@ -160,9 +160,9 @@ static struct net_buf *setup_ethernet_frame(struct net_pkt *pkt,
 		eth->type = htons(NET_ETH_PTYPE_PTP);
 	}
 
-	memcpy(&eth->src.addr, net_if_get_link_addr(iface)->addr,
+	memcpy(eth->src.addr, net_if_get_link_addr(iface)->addr,
 	       sizeof(struct net_eth_addr));
-	memcpy(&eth->dst.addr, &gptp_multicast_eth_addr,
+	memcpy(eth->dst.addr, &gptp_multicast_eth_addr,
 	       sizeof(struct net_eth_addr));
 
 	return frag;
@@ -354,8 +354,8 @@ struct net_pkt *gptp_prepare_pdelay_req(int port)
 	hdr->reserved1 = 0;
 	hdr->reserved2 = 0;
 
-	memcpy(&hdr->port_id.clk_id,
-	       &port_ds->port_id.clk_id, GPTP_CLOCK_ID_LEN);
+	memcpy(hdr->port_id.clk_id,
+	       port_ds->port_id.clk_id, GPTP_CLOCK_ID_LEN);
 
 	/* PTP configuration. */
 	memset(&req->reserved1, 0, sizeof(req->reserved1));
@@ -429,7 +429,7 @@ struct net_pkt *gptp_prepare_pdelay_resp(int port,
 	hdr->reserved1 = 0;
 	hdr->reserved2 = 0;
 
-	memcpy(&hdr->port_id.clk_id, &port_ds->port_id.clk_id,
+	memcpy(hdr->port_id.clk_id, port_ds->port_id.clk_id,
 	       GPTP_CLOCK_ID_LEN);
 
 	/* PTP configuration. */
@@ -505,7 +505,7 @@ struct net_pkt *gptp_prepare_pdelay_follow_up(int port,
 	hdr->reserved1 = 0;
 	hdr->reserved2 = 0;
 
-	memcpy(&hdr->port_id.clk_id, &port_ds->port_id.clk_id,
+	memcpy(hdr->port_id.clk_id, port_ds->port_id.clk_id,
 	       GPTP_CLOCK_ID_LEN);
 
 	/* PTP configuration. */
@@ -533,6 +533,7 @@ fail:
 struct net_pkt *gptp_prepare_announce(int port)
 {
 	struct gptp_global_ds *global_ds;
+	struct gptp_default_ds *default_ds;
 	struct gptp_port_ds *port_ds;
 	struct gptp_announce *ann;
 	struct net_if *iface;
@@ -542,6 +543,7 @@ struct net_pkt *gptp_prepare_announce(int port)
 
 	NET_ASSERT((port >= GPTP_PORT_START) && (port <= GPTP_PORT_END));
 	global_ds = GPTP_GLOBAL_DS();
+	default_ds = GPTP_DEFAULT_DS();
 	iface = GPTP_PORT_IFACE(port);
 	NET_ASSERT(iface);
 
@@ -590,9 +592,29 @@ struct net_pkt *gptp_prepare_announce(int port)
 	ann->cur_utc_offset = global_ds->current_utc_offset;
 	ann->time_source = global_ds->time_source;
 
-	memcpy(&ann->root_system_id,
-	       &GPTP_PORT_BMCA_DATA(port)->master_priority.root_system_id,
-	       sizeof(struct gptp_root_system_identity));
+	switch (GPTP_PORT_BMCA_DATA(port)->info_is) {
+	case GPTP_INFO_IS_MINE:
+		ann->root_system_id.grand_master_prio1 = default_ds->priority1;
+		ann->root_system_id.grand_master_prio2 = default_ds->priority2;
+
+		memcpy(&ann->root_system_id.clk_quality,
+		       &default_ds->clk_quality,
+		       sizeof(struct gptp_clock_quality));
+
+		memcpy(&ann->root_system_id.grand_master_id,
+		       default_ds->clk_id,
+		       GPTP_CLOCK_ID_LEN);
+		break;
+	case GPTP_INFO_IS_RECEIVED:
+		memcpy(&ann->root_system_id,
+		       &GPTP_PORT_BMCA_DATA(port)->
+				master_priority.root_system_id,
+		       sizeof(struct gptp_root_system_identity));
+		break;
+	default:
+		goto fail;
+	}
+
 	ann->steps_removed = global_ds->master_steps_removed;
 	hdr->sequence_id = htons(port_ds->announce_seq_id);
 	port_ds->announce_seq_id++;
@@ -680,9 +702,13 @@ void gptp_handle_pdelay_req(int port, struct net_pkt *pkt)
 
 	GPTP_STATS_INC(port, rx_pdelay_req_count);
 
-	if (ts_cb_registered) {
+	if (ts_cb_registered == true) {
 		NET_WARN("Multiple pdelay requests");
-		return;
+
+		net_if_unregister_timestamp_cb(&pdelay_response_timestamp_cb);
+		net_pkt_unref(pdelay_response_timestamp_cb.pkt);
+
+		ts_cb_registered = false;
 	}
 
 	/* Prepare response and send */
@@ -692,16 +718,17 @@ void gptp_handle_pdelay_req(int port, struct net_pkt *pkt)
 	}
 
 	net_if_register_timestamp_cb(&pdelay_response_timestamp_cb,
+				     reply,
 				     net_pkt_iface(pkt),
 				     gptp_pdelay_response_timestamp_callback);
-
-	ts_cb_registered = true;
 
 	/* TS thread will send this back to us so increment ref count so that
 	 * the packet is not removed when sending it. This will be unref'ed by
 	 * timestamp callback in gptp_pdelay_response_timestamp_callback()
 	 */
 	net_pkt_ref(reply);
+
+	ts_cb_registered = true;
 
 	gptp_send_pdelay_resp(port, reply, net_pkt_timestamp(pkt));
 }
@@ -862,6 +889,7 @@ void gptp_send_sync(int port, struct net_pkt *pkt)
 {
 	if (!sync_cb_registered) {
 		net_if_register_timestamp_cb(&sync_timestamp_cb,
+					     pkt,
 					     net_pkt_iface(pkt),
 					     gptp_sync_timestamp_callback);
 		sync_cb_registered = true;

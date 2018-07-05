@@ -395,9 +395,9 @@ static void gptp_init_clock_ds(void)
 	/* Initialize parent data set. */
 
 	/* parent clock id is initialized to default_ds clock id. */
-	memcpy(&parent_ds->port_id.clk_id, &default_ds->clk_id,
+	memcpy(parent_ds->port_id.clk_id, default_ds->clk_id,
 	       GPTP_CLOCK_ID_LEN);
-	memcpy(&parent_ds->gm_id, &default_ds->clk_id, GPTP_CLOCK_ID_LEN);
+	memcpy(parent_ds->gm_id, default_ds->clk_id, GPTP_CLOCK_ID_LEN);
 	parent_ds->port_id.port_number = 0;
 
 	/* TODO: Check correct value for below field. */
@@ -536,7 +536,7 @@ static void gptp_thread(void)
 
 	for (port = GPTP_PORT_START; port < GPTP_PORT_END; port++) {
 		gptp_init_port_ds(port);
-		GPTP_GLOBAL_DS()->selected_role[port] = GPTP_PORT_DISABLED;
+		gptp_change_port_state(port, GPTP_PORT_DISABLED);
 	}
 
 	while (1) {
@@ -853,7 +853,7 @@ int gptp_get_port_data(struct gptp_domain *domain,
 		return -ENOENT;
 	}
 
-	if (port < 0 || port > CONFIG_NET_GPTP_NUM_PORTS) {
+	if (port < GPTP_PORT_START || port >= GPTP_PORT_END) {
 		return -EINVAL;
 	}
 
