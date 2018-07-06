@@ -33,11 +33,13 @@
 	scl-pin = <7>;
 };
 
+/*
 &i2c1 {
 	status = "ok";
 	sda-pin = <5>;
 	scl-pin = <6>;
 };
+*/
 
 &flash0 {
 	/*
