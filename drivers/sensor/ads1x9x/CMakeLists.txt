@@ -1,0 +1,4 @@
+zephyr_library()
+
+zephyr_library_sources_ifdef(CONFIG_ADS1X9X ads1x9x.c)
+zephyr_library_sources_ifdef(CONFIG_ADS1X9X_TRIGGER ads1x9x_trigger.c)
