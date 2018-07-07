@@ -271,6 +271,13 @@ static void usb_handle_control_transfer(u8_t ep,
 		/* Defaults for data pointer and residue */
 		type = REQTYPE_GET_TYPE(setup->bmRequestType);
 		usb_dev.data_buf = usb_dev.data_store[type];
+		if (!usb_dev.data_buf) {
+			SYS_LOG_DBG("buffer not available\n");
+			usb_dc_ep_set_stall(USB_CONTROL_OUT_EP0);
+			usb_dc_ep_set_stall(USB_CONTROL_IN_EP0);
+			return;
+		}
+
 		usb_dev.data_buf_residue = setup->wLength;
 		usb_dev.data_buf_len = setup->wLength;
 
@@ -310,6 +317,7 @@ static void usb_handle_control_transfer(u8_t ep,
 		    usb_dev.data_buf_residue, &chunk) < 0) {
 			SYS_LOG_DBG("Read DATA Packet failed\n");
 			usb_dc_ep_set_stall(USB_CONTROL_IN_EP0);
+			usb_dc_ep_set_stall(USB_CONTROL_OUT_EP0);
 			return;
 		}
 
@@ -726,11 +734,12 @@ static bool usb_handle_std_endpoint_req(struct usb_setup_packet *setup,
 		s32_t *len, u8_t **data_buf)
 {
 	u8_t *data = *data_buf;
+	u8_t ep = setup->wIndex;
 
 	switch (setup->bRequest) {
 	case REQ_GET_STATUS:
 		/* bit 0 = endpointed halted or not */
-		usb_dc_ep_is_stalled(setup->wIndex, &data[0]);
+		usb_dc_ep_is_stalled(ep, &data[0]);
 		data[1] = 0;
 		*len = 2;
 		break;
@@ -738,8 +747,11 @@ static bool usb_handle_std_endpoint_req(struct usb_setup_packet *setup,
 	case REQ_CLEAR_FEATURE:
 		if (setup->wValue == FEA_ENDPOINT_HALT) {
 			/* clear HALT by unstalling */
-			SYS_LOG_INF("... EP clear halt %x\n", setup->wIndex);
-			usb_dc_ep_clear_stall(setup->wIndex);
+			SYS_LOG_INF("... EP clear halt %x\n", ep);
+			usb_dc_ep_clear_stall(ep);
+			if (usb_dev.status_callback) {
+				usb_dev.status_callback(USB_DC_CLEAR_HALT, &ep);
+			}
 			break;
 		}
 		/* only ENDPOINT_HALT defined for endpoints */
@@ -748,8 +760,11 @@ static bool usb_handle_std_endpoint_req(struct usb_setup_packet *setup,
 	case REQ_SET_FEATURE:
 		if (setup->wValue == FEA_ENDPOINT_HALT) {
 			/* set HALT by stalling */
-			SYS_LOG_INF("--- EP SET halt %x\n", setup->wIndex);
-			usb_dc_ep_set_stall(setup->wIndex);
+			SYS_LOG_INF("--- EP SET halt %x\n", ep);
+			usb_dc_ep_set_stall(ep);
+			if (usb_dev.status_callback) {
+				usb_dev.status_callback(USB_DC_SET_HALT, &ep);
+			}
 			break;
 		}
 		/* only ENDPOINT_HALT defined for endpoints */
