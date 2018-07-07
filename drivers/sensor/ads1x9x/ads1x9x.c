@@ -799,7 +799,7 @@ int ads1x9x_init(struct device *dev)
 		return -EINVAL;
 	}
 
-	ads1x9x->spi_cfg.operation = SPI_WORD_SET(8);
+	ads1x9x->spi_cfg.operation = SPI_WORD_SET(8) | SPI_MODE_CPHA & (~SPI_MODE_CPOL) | SPI_TRANSFER_MSB;
 	ads1x9x->spi_cfg.frequency = CONFIG_ADS1X9X_SPI_BUS_FREQ;
 	ads1x9x->spi_cfg.slave = CONFIG_ADS1X9X_SLAVE;
 
