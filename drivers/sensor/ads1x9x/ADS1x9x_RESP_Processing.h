@@ -35,9 +35,9 @@
 //! \file   ADS1x9x_RESP_Processing.h
 //!
 //! \brief  The software module is responsible extracting the respiration rate
-//!			from the ECG signals. Knowledge if signal processing are necessary
-//!			to understand this file. Originally the algorithm was developed in
-//!			MATLAB and eventually ported over to the MSP430.
+//!         from the ECG signals. Knowledge if signal processing are necessary
+//!         to understand this file. Originally the algorithm was developed in
+//!         MATLAB and eventually ported over to the MSP430.
 //
 //  Group:          MSP430
 //  Target Device:  MSP430FR5989
@@ -50,21 +50,21 @@
 #ifndef ADS1x9x_RESP_PROCESSING_H_
 #define ADS1x9x_RESP_PROCESSING_H_
 
-#define RESP_MAX_PEAK_TO_SEARCH 			5
-#define RESP_MAXIMA_SEARCH_WINDOW			8
-#define RESP_MINIMUM_SKIP_WINDOW			80
+#define RESP_MAX_PEAK_TO_SEARCH             5
+#define RESP_MAXIMA_SEARCH_WINDOW           8
+#define RESP_MINIMUM_SKIP_WINDOW            80
 
-#define RESP_SAMPLING_RATE				100
-#define RESP_TWO_SEC_SAMPLES  			2 * RESP_SAMPLING_RATE
+#define RESP_SAMPLING_RATE              100
+#define RESP_TWO_SEC_SAMPLES            2 * RESP_SAMPLING_RATE
 
 /*threshold = 0.7 * maxima*/
-#define QRS_THRESHOLD_FRACTION	0.7					
+#define QRS_THRESHOLD_FRACTION  0.7
 
-#define MAXCHAN						2
-#define FILTERORDER 				161
+#define MAXCHAN                     2
+#define FILTERORDER                 161
 
-#define TRUE	1
-#define FALSE	0
+#define TRUE    1
+#define FALSE   0
 
 /* DC Removal Numerator Coeff*/
 #define NRCOEFF (0.992)
@@ -72,13 +72,13 @@
 //*****************************************************************************
 //
 //! \brief   The function process one sample of data at a time and which stores
-//!			 the filtered out sample in the Leadinfobuff. The function does the
-//!			 following
-//!			 	- DC Removal of the current sample                          							**
-//!				- Multi band FIR LPF with Notch at 50Hz filtering
+//!          the filtered out sample in the Leadinfobuff. The function does the
+//!          following
+//!             - DC Removal of the current sample                                                      **
+//!             - Multi band FIR LPF with Notch at 50Hz filtering
 //
 //! \param RESP_WorkingBuff     In - input sample buffer
-//! \param FilterOut     		 Out - Filtered output
+//! \param FilterOut             Out - Filtered output
 //
 //! \return  None
 //
@@ -88,13 +88,13 @@ void Resp_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut);
 //*****************************************************************************
 //
 //! \brief   This function is called by the main acquisition thread at every
-//!			 samples read. Before calling the process_buffer() the below check
-//!	  		 has to be done. i.e. We have always received +2 samples before
-//!			 starting the processing  for each samples. This function basically
-//!			 checks the difference between the current  and  previous ECG Samples
-//!			 using 1st & 2nd differentiation calculations.
-//!			 	- DC Removal of the current sample
-//!				- Multi band FIR LPF with Notch at 50Hz filtering
+//!          samples read. Before calling the process_buffer() the below check
+//!          has to be done. i.e. We have always received +2 samples before
+//!          starting the processing  for each samples. This function basically
+//!          checks the difference between the current  and  previous ECG Samples
+//!          using 1st & 2nd differentiation calculations.
+//!             - DC Removal of the current sample
+//!             - Multi band FIR LPF with Notch at 50Hz filtering
 //
 //! \param Respiration CurrSample
 //
@@ -106,7 +106,7 @@ void RESP_Algorithm_Interface(short CurrSample);
 //*****************************************************************************
 //
 //! \brief   The function process one sample filtering with 161 ORDER FIR low
-//!			 pass filter with 2Hz .
+//!          pass filter with 2Hz .
 //
 //! \param RESP_WorkingBuff In - input sample buffer
 //! \param CoeffBuf  In - Co-eficients for FIR filter.

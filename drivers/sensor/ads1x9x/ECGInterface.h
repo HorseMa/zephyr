@@ -35,11 +35,11 @@
 //! \file   ECGInterface.h
 //!
 //! \brief  This is the IC interface file for ECG ICs. This IC interface
-//! 		file contains function calls which are only found in the ADS1292R IC
-//!			driver file. If its corresponding ADS1292R IC driver files changes,
-//!			then this IC interface file should also change as well. This IC
-//!			interface file has generic function calls which should be found in
-//!			similar ECG IC’s. For example power up IC, power down IC, get ECG.
+//!         file contains function calls which are only found in the ADS1292R IC
+//!         driver file. If its corresponding ADS1292R IC driver files changes,
+//!         then this IC interface file should also change as well. This IC
+//!         interface file has generic function calls which should be found in
+//!         similar ECG IC’s. For example power up IC, power down IC, get ECG.
 //
 //  Group:          MSP430
 //  Target Device:  MSP430FR5989
@@ -53,14 +53,14 @@
 #define ECGINTERFACE_H_
 
 //! \brief This #define variable defines the number of delay cycles in a delay
-//! 		subroutine. An update to this file would be adding a state machine and
-//! 		incorporating a timer.
+//!         subroutine. An update to this file would be adding a state machine and
+//!         incorporating a timer.
 #define DELAY_COUNT 2
 
 //*****************************************************************************
 //
 //! \brief   This function initializes the AD1292R IC by calling functions
-//!			 found in the AD1292R IC driver file.
+//!          found in the AD1292R IC driver file.
 //
 //! \param none     none
 //
@@ -72,7 +72,7 @@ void ECGInterface_Init(void);
 //*****************************************************************************
 //
 //! \brief   This function puts the AD1292R IC in Normal mode. According to the
-//!			 datasheet the current consumption in this mode is 670 uW.
+//!          datasheet the current consumption in this mode is 670 uW.
 //
 //! \param none     none
 //
@@ -84,7 +84,7 @@ void ECGInterface_powerMode0(void);
 //*****************************************************************************
 //
 //! \brief   This function puts the AD1292R IC in Standby mode. According to the
-//!			 datasheet the current consumption in this mode is 160 uW.
+//!          datasheet the current consumption in this mode is 160 uW.
 //
 //! \param none     none
 //
@@ -96,8 +96,8 @@ void ECGInterface_powerMode1(void);
 //*****************************************************************************
 //
 //! \brief   This function handles everything needed to write to the ADS1292
-//!			 registers. Because the functions call is remote, it has the
-//!			 possibility to hang. Caution should be used when calling this function.
+//!          registers. Because the functions call is remote, it has the
+//!          possibility to hang. Caution should be used when calling this function.
 //
 //! \param none     none
 //
@@ -109,8 +109,8 @@ void ECGInterface_RemoteWriteRegister(void);
 //*****************************************************************************
 //
 //! \brief   This function handles everything needed to read from the ADS1292
-//!			 registers. Because the functions call is remote, it has the
-//!			 possibility to hang. Caution should be used when calling this function.
+//!          registers. Because the functions call is remote, it has the
+//!          possibility to hang. Caution should be used when calling this function.
 //
 //! \param none     none
 //
@@ -122,9 +122,9 @@ void ECGInterface_RemoteReadRegister(void);
 //*****************************************************************************
 //
 //! \brief   This functions sets the ECG Interface in streaming mode. Streaming
-//!			 mode basically transferred the ECG data directly to a file.
-//!			 Preprocessing is done before the transfer to extract the respiration
-//!			 rate, heart rate, and lead status.
+//!          mode basically transferred the ECG data directly to a file.
+//!          Preprocessing is done before the transfer to extract the respiration
+//!          rate, heart rate, and lead status.
 //
 //! \param none     none
 //
@@ -136,9 +136,9 @@ void ECGInterface_StreamData(void);
 //*****************************************************************************
 //
 //! \brief   This function sets the ECG Interface to acquire data while the phone
-//!			 is not close to the MPBSM system. Another way of calling this mode
-//!			 is data logging mode. This function should be used in conjunction
-//!			 with ECGInterface_DownloadData().
+//!          is not close to the MPBSM system. Another way of calling this mode
+//!          is data logging mode. This function should be used in conjunction
+//!          with ECGInterface_DownloadData().
 //
 //! \param none     none
 //
@@ -150,8 +150,8 @@ void ECGInterface_AcquireData(void);
 //*****************************************************************************
 //
 //! \brief   This function downloads the data which was gathered by the
-//!			 ECGInterface_AcquireData() function call and displays it in the
-//!			 Android app.
+//!          ECGInterface_AcquireData() function call and displays it in the
+//!          Android app.
 //
 //! \param none     none
 //
@@ -163,7 +163,7 @@ void ECGInterface_DownloadData(void);
 //*****************************************************************************
 //
 //! \brief   This function enables the MSP430 boot loader. It allows the MPS430
-//!			 to upgrade its firmware. This function should be moved.
+//!          to upgrade its firmware. This function should be moved.
 //
 //! \param none     none
 //
@@ -186,7 +186,7 @@ void ECGInterface_FirmwareVersion(void);
 //*****************************************************************************
 //
 //! \brief   This function sets up the filter used by the respiration rate and
-//!			 heart rate algorithms.
+//!          heart rate algorithms.
 //
 //! \param none     none
 //
@@ -198,8 +198,8 @@ void ECGInterface_SelectFilter(void);
 //*****************************************************************************
 //
 //! \brief   This function works similar if not identical to  the
-//!			 ECGInterface_AcquireData function. This is a residual function
-//!			 from the ADS1x9x EVM software.
+//!          ECGInterface_AcquireData function. This is a residual function
+//!          from the ADS1x9x EVM software.
 //
 //! \param none     none
 //
@@ -211,8 +211,8 @@ void ECGInterface_KeyPressed(void);
 //*****************************************************************************
 //
 //! \brief   This function disables whatever settings where done by the
-//!		     ECGInterface_KeyPressed() function. This function is also a residual
-//!			 function from the ADS1x9x EVM software.
+//!          ECGInterface_KeyPressed() function. This function is also a residual
+//!          function from the ADS1x9x EVM software.
 //
 //! \param none     none
 //

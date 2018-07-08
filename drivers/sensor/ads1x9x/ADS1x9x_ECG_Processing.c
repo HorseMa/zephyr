@@ -63,7 +63,7 @@ static unsigned short QRS_B4_Buffer_ptr = 0 ;
 unsigned short QRS_Heart_Rate = 0 ;
 unsigned char HR_flag;
 
-/* 	Variable which holds the threshold value to calculate the maxima */
+/*  Variable which holds the threshold value to calculate the maxima */
 short QRS_Threshold_Old = 0;
 short QRS_Threshold_New = 0;
 
@@ -178,361 +178,361 @@ extern unsigned char ADS1x9xRegVal[];
 
 void ECG_FilterProcess(short * WorkingBuff, short * CoeffBuf, short* FilterOut)
 {
-	short i, Val_Hi, Val_Lo;
+    short i, Val_Hi, Val_Lo;
 
-	RESHI = 0;
-	RESLO = 0;
-	MPYS = *WorkingBuff--;				// Load first operand -unsigned mult
-	OP2 = *CoeffBuf++;					// Load second operand
-	
-	for ( i = 0; i < FILTERORDER/10; i++)
-	{
+    RESHI = 0;
+    RESLO = 0;
+    MPYS = *WorkingBuff--;              // Load first operand -unsigned mult
+    OP2 = *CoeffBuf++;                  // Load second operand
 
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
+    for ( i = 0; i < FILTERORDER/10; i++)
+    {
 
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-		MACS = *WorkingBuff--;			// Load first operand -unsigned mult
-		OP2 = *CoeffBuf++;				// Load second operand
-	  
-	}
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
 
-	 Val_Hi = RESHI << 1;				// Q15 result
-	 Val_Lo = RESLO >> 15;
-	 Val_Lo &= 0x01;
-	 *FilterOut = Val_Hi | Val_Lo; 
-	
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+        MACS = *WorkingBuff--;          // Load first operand -unsigned mult
+        OP2 = *CoeffBuf++;              // Load second operand
+
+    }
+
+     Val_Hi = RESHI << 1;               // Q15 result
+     Val_Lo = RESLO >> 15;
+     Val_Lo &= 0x01;
+     *FilterOut = Val_Hi | Val_Lo;
+
 }
 
 void ECG_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 {
 
-	static unsigned short ECG_bufStart=0, ECG_bufCur = FILTERORDER-1, ECGFirstFlag = 1;
- 	static short ECG_Pvev_DC_Sample, ECG_Pvev_Sample;/* Working Buffer Used for Filtering*/
-//	static short ECG_WorkingBuff[2 * FILTERORDER];
- 	short *CoeffBuf;
- 	
- 	short temp1, temp2, ECGData;
- 	
+    static unsigned short ECG_bufStart=0, ECG_bufCur = FILTERORDER-1, ECGFirstFlag = 1;
+    static short ECG_Pvev_DC_Sample, ECG_Pvev_Sample;/* Working Buffer Used for Filtering*/
+//  static short ECG_WorkingBuff[2 * FILTERORDER];
+    short *CoeffBuf;
 
-	/* Count variable*/
-	unsigned short Cur_Chan;
-	short FiltOut;
-//	short FilterOut[2];
-	CoeffBuf = CoeffBuf_40Hz_LowPass;					// Default filter option is 40Hz LowPass
-	if ( Filter_Option == 2)
-	{
-		CoeffBuf = CoeffBuf_50Hz_Notch;					// filter option is 50Hz Notch & 0.5-150 Hz Band
-	}
-	else if ( Filter_Option == 3)
-	{
-		CoeffBuf = CoeffBuf_60Hz_Notch;					// filter option is 60Hz Notch & 0.5-150 Hz Band
-	}
-	if  ( ECGFirstFlag )								// First Time initialize static variables.
-	{
-		for ( Cur_Chan =0 ; Cur_Chan < FILTERORDER; Cur_Chan++)
-		{
-			ECG_WorkingBuff[Cur_Chan] = 0;
-		} 
-		ECG_Pvev_DC_Sample = 0;
-		ECG_Pvev_Sample = 0;
-		ECGFirstFlag = 0;
-	}
-	temp1 = NRCOEFF * ECG_Pvev_DC_Sample;				//First order IIR
-	ECG_Pvev_DC_Sample = (CurrAqsSample[0]  - ECG_Pvev_Sample) + temp1;
-	ECG_Pvev_Sample = CurrAqsSample[0];
-	temp2 = ECG_Pvev_DC_Sample >> 2;
-	ECGData = (short) temp2;
+    short temp1, temp2, ECGData;
 
-	/* Store the DC removed value in Working buffer in millivolts range*/
-	ECG_WorkingBuff[ECG_bufCur] = ECGData;
-	ECG_FilterProcess(&ECG_WorkingBuff[ECG_bufCur],CoeffBuf,(short*)&FiltOut);
-	/* Store the DC removed value in ECG_WorkingBuff buffer in millivolts range*/
-	ECG_WorkingBuff[ECG_bufStart] = ECGData;
 
-	//FiltOut = ECGData[Cur_Chan];
+    /* Count variable*/
+    unsigned short Cur_Chan;
+    short FiltOut;
+//  short FilterOut[2];
+    CoeffBuf = CoeffBuf_40Hz_LowPass;                   // Default filter option is 40Hz LowPass
+    if ( Filter_Option == 2)
+    {
+        CoeffBuf = CoeffBuf_50Hz_Notch;                 // filter option is 50Hz Notch & 0.5-150 Hz Band
+    }
+    else if ( Filter_Option == 3)
+    {
+        CoeffBuf = CoeffBuf_60Hz_Notch;                 // filter option is 60Hz Notch & 0.5-150 Hz Band
+    }
+    if  ( ECGFirstFlag )                                // First Time initialize static variables.
+    {
+        for ( Cur_Chan =0 ; Cur_Chan < FILTERORDER; Cur_Chan++)
+        {
+            ECG_WorkingBuff[Cur_Chan] = 0;
+        }
+        ECG_Pvev_DC_Sample = 0;
+        ECG_Pvev_Sample = 0;
+        ECGFirstFlag = 0;
+    }
+    temp1 = NRCOEFF * ECG_Pvev_DC_Sample;               //First order IIR
+    ECG_Pvev_DC_Sample = (CurrAqsSample[0]  - ECG_Pvev_Sample) + temp1;
+    ECG_Pvev_Sample = CurrAqsSample[0];
+    temp2 = ECG_Pvev_DC_Sample >> 2;
+    ECGData = (short) temp2;
 
-	/* Store the filtered out sample to the LeadInfo buffer*/
-	FilteredOut[0] = FiltOut ;//(CurrOut);
+    /* Store the DC removed value in Working buffer in millivolts range*/
+    ECG_WorkingBuff[ECG_bufCur] = ECGData;
+    ECG_FilterProcess(&ECG_WorkingBuff[ECG_bufCur],CoeffBuf,(short*)&FiltOut);
+    /* Store the DC removed value in ECG_WorkingBuff buffer in millivolts range*/
+    ECG_WorkingBuff[ECG_bufStart] = ECGData;
 
-	ECG_bufCur++;
-	ECG_bufStart++;
-	if ( ECG_bufStart  == (FILTERORDER-1))
-	{
-		ECG_bufStart=0; 
-		ECG_bufCur = FILTERORDER-1;
-	}
+    //FiltOut = ECGData[Cur_Chan];
 
-	return ;
+    /* Store the filtered out sample to the LeadInfo buffer*/
+    FilteredOut[0] = FiltOut ;//(CurrOut);
+
+    ECG_bufCur++;
+    ECG_bufStart++;
+    if ( ECG_bufStart  == (FILTERORDER-1))
+    {
+        ECG_bufStart=0;
+        ECG_bufCur = FILTERORDER-1;
+    }
+
+    return ;
 }
 
 void ECG_ProcessCurrSample_ch0(short *CurrAqsSample, short *FilteredOut)
 {
 
- 	static unsigned short ECG_ch0_bufStart=0, ECG_ch0_bufCur = FILTERORDER-1, ECG_ch0FirstFlag = 1;
- 	static short ECG_ch0_Pvev_DC_Sample, ECG_ch0_Pvev_Sample;
- 	//static short ECG_ch0_WorkingBuff[2 * FILTERORDER];
- 	short *CoeffBuf;
- 	
- 	short temp1_ch0, temp2_ch0, ECGData_ch0;
- 	
+    static unsigned short ECG_ch0_bufStart=0, ECG_ch0_bufCur = FILTERORDER-1, ECG_ch0FirstFlag = 1;
+    static short ECG_ch0_Pvev_DC_Sample, ECG_ch0_Pvev_Sample;
+    //static short ECG_ch0_WorkingBuff[2 * FILTERORDER];
+    short *CoeffBuf;
 
-	/* Count variable*/
-	unsigned short Cur_Chan_ch0;
-	short FiltOut_ch0;
+    short temp1_ch0, temp2_ch0, ECGData_ch0;
 
-	CoeffBuf = CoeffBuf_40Hz_LowPass;					// Default filter option is 40Hz LowPass
-	if ( Filter_Option == 2)
-	{
-		CoeffBuf = CoeffBuf_50Hz_Notch;					// filter option is 50Hz Notch & 0.5-150 Hz Band
-	}
-	else if ( Filter_Option == 3)
-	{
-		CoeffBuf = CoeffBuf_60Hz_Notch;					// filter option is 60Hz Notch & 0.5-150 Hz Band
-	}
-	if  ( ECG_ch0FirstFlag )							// First time initialize static variables
-	{
-		for ( Cur_Chan_ch0 =0 ; Cur_Chan_ch0 < FILTERORDER; Cur_Chan_ch0++)
-		{
-			ECG_ch0_WorkingBuff[Cur_Chan_ch0] = 0;
-		} 
-		ECG_ch0_Pvev_DC_Sample = 0;
-		ECG_ch0_Pvev_Sample = 0;
-		ECG_ch0FirstFlag = 0;
-	}
-	temp1_ch0 = NRCOEFF * ECG_ch0_Pvev_DC_Sample;			// First order IIR
-	ECG_ch0_Pvev_DC_Sample = (CurrAqsSample[0]  - ECG_ch0_Pvev_Sample) + temp1_ch0;
-	ECG_ch0_Pvev_Sample = CurrAqsSample[0];
-	temp2_ch0 = ECG_ch0_Pvev_DC_Sample >> 2;
-	ECGData_ch0 = (short) temp2_ch0;
 
-	/* Store the DC removed value in Working buffer in millivolts range*/
-	ECG_ch0_WorkingBuff[ECG_ch0_bufCur] = ECGData_ch0;
-	/* */
-	ECG_FilterProcess(&ECG_ch0_WorkingBuff[ECG_ch0_bufCur],CoeffBuf,(short*)&FiltOut_ch0);
-	/* Store the DC removed value in ECG_WorkingBuff buffer in millivolts range*/
-	ECG_ch0_WorkingBuff[ECG_ch0_bufStart] = ECGData_ch0;
+    /* Count variable*/
+    unsigned short Cur_Chan_ch0;
+    short FiltOut_ch0;
 
-	//FiltOut = ECGData[Cur_Chan];
+    CoeffBuf = CoeffBuf_40Hz_LowPass;                   // Default filter option is 40Hz LowPass
+    if ( Filter_Option == 2)
+    {
+        CoeffBuf = CoeffBuf_50Hz_Notch;                 // filter option is 50Hz Notch & 0.5-150 Hz Band
+    }
+    else if ( Filter_Option == 3)
+    {
+        CoeffBuf = CoeffBuf_60Hz_Notch;                 // filter option is 60Hz Notch & 0.5-150 Hz Band
+    }
+    if  ( ECG_ch0FirstFlag )                            // First time initialize static variables
+    {
+        for ( Cur_Chan_ch0 =0 ; Cur_Chan_ch0 < FILTERORDER; Cur_Chan_ch0++)
+        {
+            ECG_ch0_WorkingBuff[Cur_Chan_ch0] = 0;
+        }
+        ECG_ch0_Pvev_DC_Sample = 0;
+        ECG_ch0_Pvev_Sample = 0;
+        ECG_ch0FirstFlag = 0;
+    }
+    temp1_ch0 = NRCOEFF * ECG_ch0_Pvev_DC_Sample;           // First order IIR
+    ECG_ch0_Pvev_DC_Sample = (CurrAqsSample[0]  - ECG_ch0_Pvev_Sample) + temp1_ch0;
+    ECG_ch0_Pvev_Sample = CurrAqsSample[0];
+    temp2_ch0 = ECG_ch0_Pvev_DC_Sample >> 2;
+    ECGData_ch0 = (short) temp2_ch0;
 
-	/* Store the filtered out sample to the LeadInfo buffer*/
-	FilteredOut[0] = FiltOut_ch0 ;//(CurrOut);
+    /* Store the DC removed value in Working buffer in millivolts range*/
+    ECG_ch0_WorkingBuff[ECG_ch0_bufCur] = ECGData_ch0;
+    /* */
+    ECG_FilterProcess(&ECG_ch0_WorkingBuff[ECG_ch0_bufCur],CoeffBuf,(short*)&FiltOut_ch0);
+    /* Store the DC removed value in ECG_WorkingBuff buffer in millivolts range*/
+    ECG_ch0_WorkingBuff[ECG_ch0_bufStart] = ECGData_ch0;
 
-	ECG_ch0_bufCur++;
-	ECG_ch0_bufStart++;
-	if ( ECG_ch0_bufStart  == (FILTERORDER-1))
-	{
-		ECG_ch0_bufStart=0; 
-		ECG_ch0_bufCur = FILTERORDER-1;
-	}
+    //FiltOut = ECGData[Cur_Chan];
 
-	return ;
+    /* Store the filtered out sample to the LeadInfo buffer*/
+    FilteredOut[0] = FiltOut_ch0 ;//(CurrOut);
+
+    ECG_ch0_bufCur++;
+    ECG_ch0_bufStart++;
+    if ( ECG_ch0_bufStart  == (FILTERORDER-1))
+    {
+        ECG_ch0_bufStart=0;
+        ECG_ch0_bufCur = FILTERORDER-1;
+    }
+
+    return ;
 }
 
 static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
 {
-	/* array to hold the sample indexes S1,S2,S3 etc */
-	
-	static unsigned short s_array_index = 0 ;
-	static unsigned short m_array_index = 0 ;
-	
-	static unsigned char threshold_crossed = FALSE ;
-	static unsigned short maxima_search = 0 ;
-	static unsigned char peak_detected = FALSE ;
-	static unsigned short skip_window = 0 ;
-	static long maxima_sum = 0 ;
-	static unsigned int peak = 0;
-	static unsigned int sample_sum = 0;
-	static unsigned int nopeak=0;
-	unsigned short max = 0 ;
-	unsigned short HRAvg;
+    /* array to hold the sample indexes S1,S2,S3 etc */
 
-	
-	if( TRUE == threshold_crossed  )
-	{
-		/*
-		Once the sample value crosses the threshold check for the
-		maxima value till MAXIMA_SEARCH_WINDOW samples are received
-		*/
-		sample_count ++ ;
-		maxima_search ++ ;
+    static unsigned short s_array_index = 0 ;
+    static unsigned short m_array_index = 0 ;
 
-		if( scaled_result > peak )
-		{
-			peak = scaled_result ;
-		}
+    static unsigned char threshold_crossed = FALSE ;
+    static unsigned short maxima_search = 0 ;
+    static unsigned char peak_detected = FALSE ;
+    static unsigned short skip_window = 0 ;
+    static long maxima_sum = 0 ;
+    static unsigned int peak = 0;
+    static unsigned int sample_sum = 0;
+    static unsigned int nopeak=0;
+    unsigned short max = 0 ;
+    unsigned short HRAvg;
 
-		if( maxima_search >= MAXIMA_SEARCH_WINDOW )
-		{
-			// Store the maxima values for each peak
-			maxima_sum += peak ;
-			maxima_search = 0 ;
 
-			threshold_crossed = FALSE ;
-			peak_detected = TRUE ;
-		}
+    if( TRUE == threshold_crossed  )
+    {
+        /*
+        Once the sample value crosses the threshold check for the
+        maxima value till MAXIMA_SEARCH_WINDOW samples are received
+        */
+        sample_count ++ ;
+        maxima_search ++ ;
 
-	}
-	else if( TRUE == peak_detected )
-	{
-		/*
-		Once the sample value goes below the threshold
-		skip the samples untill the SKIP WINDOW criteria is meet
-		*/
-		sample_count ++ ;
-		skip_window ++ ;
+        if( scaled_result > peak )
+        {
+            peak = scaled_result ;
+        }
 
-		if( skip_window >= MINIMUM_SKIP_WINDOW )
-		{
-			skip_window = 0 ;
-			peak_detected = FALSE ;
-		}
+        if( maxima_search >= MAXIMA_SEARCH_WINDOW )
+        {
+            // Store the maxima values for each peak
+            maxima_sum += peak ;
+            maxima_search = 0 ;
 
-		if( m_array_index == MAX_PEAK_TO_SEARCH )
-		{
-			sample_sum = sample_sum / (MAX_PEAK_TO_SEARCH - 1);
-			HRAvg =  (unsigned short) sample_sum  ;
+            threshold_crossed = FALSE ;
+            peak_detected = TRUE ;
+        }
+
+    }
+    else if( TRUE == peak_detected )
+    {
+        /*
+        Once the sample value goes below the threshold
+        skip the samples untill the SKIP WINDOW criteria is meet
+        */
+        sample_count ++ ;
+        skip_window ++ ;
+
+        if( skip_window >= MINIMUM_SKIP_WINDOW )
+        {
+            skip_window = 0 ;
+            peak_detected = FALSE ;
+        }
+
+        if( m_array_index == MAX_PEAK_TO_SEARCH )
+        {
+            sample_sum = sample_sum / (MAX_PEAK_TO_SEARCH - 1);
+            HRAvg =  (unsigned short) sample_sum  ;
 #if 0
-			if((LeadStatus & 0x0005)== 0x0000)
-			{
-				
-			QRS_Heart_Rate = (unsigned short) 60 *  SAMPLING_RATE;
-			QRS_Heart_Rate =  QRS_Heart_Rate/ HRAvg ;
-				if(QRS_Heart_Rate > 250)
-					QRS_Heart_Rate = 250 ;
-			}
-			else
-			{
-				QRS_Heart_Rate = 0;
-			}
+            if((LeadStatus & 0x0005)== 0x0000)
+            {
+
+            QRS_Heart_Rate = (unsigned short) 60 *  SAMPLING_RATE;
+            QRS_Heart_Rate =  QRS_Heart_Rate/ HRAvg ;
+                if(QRS_Heart_Rate > 250)
+                    QRS_Heart_Rate = 250 ;
+            }
+            else
+            {
+                QRS_Heart_Rate = 0;
+            }
 #else
-			// Compute HR without checking LeadOffStatus
-			QRS_Heart_Rate = (unsigned short) 60 *  SAMPLING_RATE;
-			QRS_Heart_Rate =  QRS_Heart_Rate/ HRAvg ;
-			if(QRS_Heart_Rate > 250)
-				QRS_Heart_Rate = 250 ;
+            // Compute HR without checking LeadOffStatus
+            QRS_Heart_Rate = (unsigned short) 60 *  SAMPLING_RATE;
+            QRS_Heart_Rate =  QRS_Heart_Rate/ HRAvg ;
+            if(QRS_Heart_Rate > 250)
+                QRS_Heart_Rate = 250 ;
 #endif
 
-			/* Setting the Current HR value in the ECG_Info structure*/
+            /* Setting the Current HR value in the ECG_Info structure*/
 
-			HR_flag = 1;
+            HR_flag = 1;
 
-			maxima_sum =  maxima_sum / MAX_PEAK_TO_SEARCH;
-			max = (short) maxima_sum ;
-			/*  calculating the new QRS_Threshold based on the maxima obtained in 4 peaks */
-			maxima_sum = max * 7;
-			maxima_sum = maxima_sum/10;
-			QRS_Threshold_New = (short)maxima_sum;
+            maxima_sum =  maxima_sum / MAX_PEAK_TO_SEARCH;
+            max = (short) maxima_sum ;
+            /*  calculating the new QRS_Threshold based on the maxima obtained in 4 peaks */
+            maxima_sum = max * 7;
+            maxima_sum = maxima_sum/10;
+            QRS_Threshold_New = (short)maxima_sum;
 
-			/* Limiting the QRS Threshold to be in the permissible range*/
-			if(QRS_Threshold_New > (4 * QRS_Threshold_Old))
-			{
-				QRS_Threshold_New = QRS_Threshold_Old;
-	 		}
+            /* Limiting the QRS Threshold to be in the permissible range*/
+            if(QRS_Threshold_New > (4 * QRS_Threshold_Old))
+            {
+                QRS_Threshold_New = QRS_Threshold_Old;
+            }
 
-	 		sample_count = 0 ;
-	 		s_array_index = 0 ;
-	 		m_array_index = 0 ;
-	 		maxima_sum = 0 ;
-			sample_index[0] = 0 ;
-			sample_index[1] = 0 ;
-			sample_index[2] = 0 ;
-			sample_index[3] = 0 ;
-			Start_Sample_Count_Flag = 0;
+            sample_count = 0 ;
+            s_array_index = 0 ;
+            m_array_index = 0 ;
+            maxima_sum = 0 ;
+            sample_index[0] = 0 ;
+            sample_index[1] = 0 ;
+            sample_index[2] = 0 ;
+            sample_index[3] = 0 ;
+            Start_Sample_Count_Flag = 0;
 
-			sample_sum = 0;
-		}
-	}
-	else if( scaled_result > QRS_Threshold_New )
-	{
-		/*
-			If the sample value crosses the threshold then store the sample index
-		*/
-		Start_Sample_Count_Flag = 1;
-		sample_count ++ ;
-		m_array_index++;
-		threshold_crossed = TRUE ;
-		peak = scaled_result ;
-		nopeak = 0;
-
-		/*	storing sample index*/
-	   	sample_index[ s_array_index ] = sample_count ;
-		if( s_array_index >= 1 )
-		{
-			sample_sum += sample_index[ s_array_index ] - sample_index[ s_array_index - 1 ] ;
-		}
-		s_array_index ++ ;
-	}
-
-	else if(( scaled_result < QRS_Threshold_New ) && (Start_Sample_Count_Flag == 1))
-	{
-		sample_count ++ ;
-        nopeak++;	
-        if (nopeak > (3 * SAMPLING_RATE))
-        { 
-        	sample_count = 0 ;
-	 		s_array_index = 0 ;
-	 		m_array_index = 0 ;
-	 		maxima_sum = 0 ;
-			sample_index[0] = 0 ;
-			sample_index[1] = 0 ;
-			sample_index[2] = 0 ;
-			sample_index[3] = 0 ;
-			Start_Sample_Count_Flag = 0;
-			peak_detected = FALSE ;
-			sample_sum = 0;
-        	    	
-        	first_peak_detect = FALSE;
-	      	nopeak=0;
-
-			QRS_Heart_Rate = 0;
-			HR_flag = 1;
+            sample_sum = 0;
         }
-	}
+    }
+    else if( scaled_result > QRS_Threshold_New )
+    {
+        /*
+            If the sample value crosses the threshold then store the sample index
+        */
+        Start_Sample_Count_Flag = 1;
+        sample_count ++ ;
+        m_array_index++;
+        threshold_crossed = TRUE ;
+        peak = scaled_result ;
+        nopeak = 0;
+
+        /*  storing sample index*/
+        sample_index[ s_array_index ] = sample_count ;
+        if( s_array_index >= 1 )
+        {
+            sample_sum += sample_index[ s_array_index ] - sample_index[ s_array_index - 1 ] ;
+        }
+        s_array_index ++ ;
+    }
+
+    else if(( scaled_result < QRS_Threshold_New ) && (Start_Sample_Count_Flag == 1))
+    {
+        sample_count ++ ;
+        nopeak++;
+        if (nopeak > (3 * SAMPLING_RATE))
+        {
+            sample_count = 0 ;
+            s_array_index = 0 ;
+            m_array_index = 0 ;
+            maxima_sum = 0 ;
+            sample_index[0] = 0 ;
+            sample_index[1] = 0 ;
+            sample_index[2] = 0 ;
+            sample_index[3] = 0 ;
+            Start_Sample_Count_Flag = 0;
+            peak_detected = FALSE ;
+            sample_sum = 0;
+
+            first_peak_detect = FALSE;
+            nopeak=0;
+
+            QRS_Heart_Rate = 0;
+            HR_flag = 1;
+        }
+    }
    else
    {
-    nopeak++;	
-   	if (nopeak > (3 * SAMPLING_RATE))
-     { 
-		/* Reset heart rate computation sate variable in case of no peak found in 3 seconds */
- 		sample_count = 0 ;
- 		s_array_index = 0 ;
- 		m_array_index = 0 ;
- 		maxima_sum = 0 ;
-		sample_index[0] = 0 ;
-		sample_index[1] = 0 ;
-		sample_index[2] = 0 ;
-		sample_index[3] = 0 ;
-		Start_Sample_Count_Flag = 0;
-		peak_detected = FALSE ;
-		sample_sum = 0;
-     	first_peak_detect = FALSE;
-	 	nopeak = 0;
-		QRS_Heart_Rate = 0;
-		HR_flag = 1;
+    nopeak++;
+    if (nopeak > (3 * SAMPLING_RATE))
+     {
+        /* Reset heart rate computation sate variable in case of no peak found in 3 seconds */
+        sample_count = 0 ;
+        s_array_index = 0 ;
+        m_array_index = 0 ;
+        maxima_sum = 0 ;
+        sample_index[0] = 0 ;
+        sample_index[1] = 0 ;
+        sample_index[2] = 0 ;
+        sample_index[3] = 0 ;
+        Start_Sample_Count_Flag = 0;
+        peak_detected = FALSE ;
+        sample_sum = 0;
+        first_peak_detect = FALSE;
+        nopeak = 0;
+        QRS_Heart_Rate = 0;
+        HR_flag = 1;
 
      }
    }
@@ -542,156 +542,156 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
 static void QRS_process_buffer( void )
 {
 
-	short first_derivative = 0 ;
-	short scaled_result = 0 ;
+    short first_derivative = 0 ;
+    short scaled_result = 0 ;
 
-	static short max = 0 ;
+    static short max = 0 ;
 
-	/* calculating first derivative*/
-	first_derivative = QRS_Next_Sample - QRS_Prev_Sample  ;
+    /* calculating first derivative*/
+    first_derivative = QRS_Next_Sample - QRS_Prev_Sample  ;
 
-	/*taking the absolute value*/
+    /*taking the absolute value*/
 
-	if(first_derivative < 0)
-	{
-		first_derivative = -(first_derivative);
-	}
+    if(first_derivative < 0)
+    {
+        first_derivative = -(first_derivative);
+    }
 
-	scaled_result = first_derivative;
+    scaled_result = first_derivative;
 
-	if( scaled_result > max )
-	{
-		max = scaled_result ;
-	}
+    if( scaled_result > max )
+    {
+        max = scaled_result ;
+    }
 
-	QRS_B4_Buffer_ptr++;
-	if (QRS_B4_Buffer_ptr ==  TWO_SEC_SAMPLES)
-	{
-		QRS_Threshold_Old = ((max *7) /10 ) ;
-		QRS_Threshold_New = QRS_Threshold_Old ;
-		if(max > 70)
-		first_peak_detect = TRUE ;
-		max = 0;
-		QRS_B4_Buffer_ptr = 0;
-	}
+    QRS_B4_Buffer_ptr++;
+    if (QRS_B4_Buffer_ptr ==  TWO_SEC_SAMPLES)
+    {
+        QRS_Threshold_Old = ((max *7) /10 ) ;
+        QRS_Threshold_New = QRS_Threshold_Old ;
+        if(max > 70)
+        first_peak_detect = TRUE ;
+        max = 0;
+        QRS_B4_Buffer_ptr = 0;
+    }
 
 
-	if( TRUE == first_peak_detect )
-	{
-		QRS_check_sample_crossing_threshold( scaled_result ) ;
-	}
+    if( TRUE == first_peak_detect )
+    {
+        QRS_check_sample_crossing_threshold( scaled_result ) ;
+    }
 }
 
 void QRS_Algorithm_Interface(short CurrSample)
 {
-//	static FILE *fp = fopen("ecgData.txt", "w");
-	static short prev_data[32] ={0};
-	short i;
-	long Mac=0;
-	prev_data[0] = CurrSample;
-	for ( i=31; i > 0; i--)
-	{
-		Mac += prev_data[i];
-		prev_data[i] = prev_data[i-1];
+//  static FILE *fp = fopen("ecgData.txt", "w");
+    static short prev_data[32] ={0};
+    short i;
+    long Mac=0;
+    prev_data[0] = CurrSample;
+    for ( i=31; i > 0; i--)
+    {
+        Mac += prev_data[i];
+        prev_data[i] = prev_data[i-1];
 
-	}
-	Mac += CurrSample;
-	Mac = Mac >> 2;
-	CurrSample = (short) Mac;
-	QRS_Second_Prev_Sample = QRS_Prev_Sample ;
-	QRS_Prev_Sample = QRS_Current_Sample ;
-	QRS_Current_Sample = QRS_Next_Sample ;
-	QRS_Next_Sample = QRS_Second_Next_Sample ;
-	QRS_Second_Next_Sample = CurrSample ;
-	QRS_process_buffer();
+    }
+    Mac += CurrSample;
+    Mac = Mac >> 2;
+    CurrSample = (short) Mac;
+    QRS_Second_Prev_Sample = QRS_Prev_Sample ;
+    QRS_Prev_Sample = QRS_Current_Sample ;
+    QRS_Current_Sample = QRS_Next_Sample ;
+    QRS_Next_Sample = QRS_Second_Next_Sample ;
+    QRS_Second_Next_Sample = CurrSample ;
+    QRS_process_buffer();
 }
 
 void ADS1x9x_Filtered_ECG(void)
 {
-	//ADS1x9x_ECG_Data_buf[1] = 0-ADS1x9x_ECG_Data_buf[1];
-	switch( ADS1x9xRegVal[0] & 0x03)
-	{
-		
-		case ADS1191_16BIT:
-		{
-		   ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] << 4;
-		   ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
+    //ADS1x9x_ECG_Data_buf[1] = 0-ADS1x9x_ECG_Data_buf[1];
+    switch( ADS1x9xRegVal[0] & 0x03)
+    {
 
-		   ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
+        case ADS1191_16BIT:
+        {
+           ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] << 4;
+           ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
 
-		   ECG_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
-		   QRS_Algorithm_Interface(ECGFilteredData[0]);
-		   ECGFilteredData[1] = ECGFilteredData[0];
-		}
-		break;
+           ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
 
-		case ADS1192_16BIT:
-		{
-		   ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] << 4;
-		   ADS1x9x_ECG_Data_buf[2] = ADS1x9x_ECG_Data_buf[2] << 4;
+           ECG_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
+           QRS_Algorithm_Interface(ECGFilteredData[0]);
+           ECGFilteredData[1] = ECGFilteredData[0];
+        }
+        break;
 
-		   ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
-		   ADS1x9x_ECG_Data_buf[2] &= 0xFFFF;
-		   ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
-		   ECGRawData[1] = (short)ADS1x9x_ECG_Data_buf[2];
+        case ADS1192_16BIT:
+        {
+           ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] << 4;
+           ADS1x9x_ECG_Data_buf[2] = ADS1x9x_ECG_Data_buf[2] << 4;
 
-		   ECG_ProcessCurrSample_ch0(&ECGRawData[0],&ECGFilteredData[0]);
-		   ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
-		   QRS_Algorithm_Interface(ECGFilteredData[1]);
-		}
-		break;
+           ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
+           ADS1x9x_ECG_Data_buf[2] &= 0xFFFF;
+           ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
+           ECGRawData[1] = (short)ADS1x9x_ECG_Data_buf[2];
 
-		case ADS1291_24BIT:
-		{
-		   ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] >> 4;
+           ECG_ProcessCurrSample_ch0(&ECGRawData[0],&ECGFilteredData[0]);
+           ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
+           QRS_Algorithm_Interface(ECGFilteredData[1]);
+        }
+        break;
 
-		   ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
+        case ADS1291_24BIT:
+        {
+           ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] >> 4;
 
-		   ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
+           ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
 
-		   ECG_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
-		   QRS_Algorithm_Interface(ECGFilteredData[0]);
-		   ECGFilteredData[1] = ECGFilteredData[0];
-		}
-		break;
+           ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
 
-		case ADS1292_24BIT:
-		{
-			if ((ADS1x9xRegVal[0]& 0x20) == 0x20)
-			{
-			   ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1];//3 bytes ch1 data
-			   ADS1x9x_ECG_Data_buf[2] = ADS1x9x_ECG_Data_buf[2] >> 4;//3 bytes CH0 data
-	
-			   ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;//3 bytes ch1 data
-			   ADS1x9x_ECG_Data_buf[2] &= 0xFFFF;//3 bytes ch0 data
-			   
-			   ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];//3 bytes ch1 data
-			   ECGRawData[1] = (short)ADS1x9x_ECG_Data_buf[2];//3 bytes ch0 data
-			   
-			   Resp_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
-			   ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
-			   RESP_Algorithm_Interface(ECGFilteredData[0]);
-			   QRS_Algorithm_Interface(ECGFilteredData[1]);
-			}
-			else
-			{
-			   ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] >> 4;//3 bytes ch1 data
-			   ADS1x9x_ECG_Data_buf[2] = ADS1x9x_ECG_Data_buf[2] >> 4;//3 bytes CH0 data
+           ECG_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
+           QRS_Algorithm_Interface(ECGFilteredData[0]);
+           ECGFilteredData[1] = ECGFilteredData[0];
+        }
+        break;
 
-			   ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
-			   ADS1x9x_ECG_Data_buf[2] &= 0xFFFF;
-			   
-			   ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
-			   ECGRawData[1] = (short)ADS1x9x_ECG_Data_buf[2];
-			   ECG_ProcessCurrSample_ch0(&ECGRawData[0],&ECGFilteredData[0]);
-			   ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
-			   QRS_Algorithm_Interface(ECGFilteredData[1]);
-				
-			}
-		}		
-		break;
-		
-	}
+        case ADS1292_24BIT:
+        {
+            if ((ADS1x9xRegVal[0]& 0x20) == 0x20)
+            {
+               ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1];//3 bytes ch1 data
+               ADS1x9x_ECG_Data_buf[2] = ADS1x9x_ECG_Data_buf[2] >> 4;//3 bytes CH0 data
+
+               ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;//3 bytes ch1 data
+               ADS1x9x_ECG_Data_buf[2] &= 0xFFFF;//3 bytes ch0 data
+
+               ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];//3 bytes ch1 data
+               ECGRawData[1] = (short)ADS1x9x_ECG_Data_buf[2];//3 bytes ch0 data
+
+               Resp_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
+               ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
+               RESP_Algorithm_Interface(ECGFilteredData[0]);
+               QRS_Algorithm_Interface(ECGFilteredData[1]);
+            }
+            else
+            {
+               ADS1x9x_ECG_Data_buf[1] = ADS1x9x_ECG_Data_buf[1] >> 4;//3 bytes ch1 data
+               ADS1x9x_ECG_Data_buf[2] = ADS1x9x_ECG_Data_buf[2] >> 4;//3 bytes CH0 data
+
+               ADS1x9x_ECG_Data_buf[1] &= 0xFFFF;
+               ADS1x9x_ECG_Data_buf[2] &= 0xFFFF;
+
+               ECGRawData[0] = (short)ADS1x9x_ECG_Data_buf[1];
+               ECGRawData[1] = (short)ADS1x9x_ECG_Data_buf[2];
+               ECG_ProcessCurrSample_ch0(&ECGRawData[0],&ECGFilteredData[0]);
+               ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
+               QRS_Algorithm_Interface(ECGFilteredData[1]);
+
+            }
+        }
+        break;
+
+    }
 }
 // End of File
 

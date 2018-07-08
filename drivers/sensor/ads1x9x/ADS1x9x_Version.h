@@ -36,7 +36,7 @@
 //! \file   ADS1x9x_Version.h
 //!
 //! \brief  This module does not contain a .c counterpart. This file only
-//!			contains the version number of the ECG software.
+//!         contains the version number of the ECG software.
 //
 //  Group:          MSP430
 //  Target Device:  MSP430FR5989
@@ -51,11 +51,11 @@
 
 /**************************************************************************************************************
  * ADS1x9x Firmware version details
- * 
+ *
  * 1. ADS1x9x_Major_Number: The Major number can be in the range of 0-255
- * 
+ *
  * 2. ADS1x9x_Minor_Number: The Minor number can be in the range of 0-255
- * 
+ *
  *************************************************************************************************************/
 #define  ADS1x9x_Major_Number 0x01
 #define  ADS1x9x_Minor_Number 0x0C
