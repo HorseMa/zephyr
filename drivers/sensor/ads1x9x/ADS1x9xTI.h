@@ -53,13 +53,39 @@
 // $Release Date: PACKAGE RELEASE DATE $
 //#############################################################################
 
-#ifndef ADS1x9x_H_
-#define ADS1x9x_H_
+#ifndef ADS1x9xTI_H_
+#define ADS1x9xTI_H_
 
+typedef unsigned char uint8_t;
+
+typedef enum stECG_RECORDER_STATE {
+
+    IDLE_STATE =0,
+    DATA_STREAMING_STATE,
+    ACQUIRE_DATA_STATE,
+    ECG_DOWNLOAD_STATE,
+    ECG_RECORDING_STATE,
+
+    ACQUIRE_TEMPERATURE_DATALOGGER_STATE
+
+
+}ECG_RECORDER_STATE;
+
+enum ADS129x
+{
+    ADS1191_16BIT  = 0,
+    ADS1192_16BIT,
+    ADS1291_24BIT,
+    ADS1292_24BIT
+};
+struct ADS1x9x_state{
+    unsigned char state;
+    unsigned char SamplingRate;
+    unsigned char command;
+};
 //*****************************************************************************
 // the includes
 //*****************************************************************************
-#include "driverlib.h"
 
 /****************************************************************/
 /* ADS1x9x COMMAND DESCRIPTION and definations */
@@ -586,9 +612,9 @@
 
 
 
-extern uint8_t ADS1x9xRegVal[16];
-extern uint8_t ADS1x9xR_Default_Register_Settings[15];
-extern uint8_t ADS1x9x_Default_Register_Settings[15];
+extern uint8_t ADS1x9xRegVal[];
+extern uint8_t ADS1x9xR_Default_Register_Settings[];
+extern uint8_t ADS1x9x_Default_Register_Settings[];
 extern uint8_t ECG_Data_rdy;
 
 //*****************************************************************************
@@ -1020,5 +1046,6 @@ void Soft_Start_ReStart_ADS1x9x (void);
 //*****************************************************************************
 void Hard_Start_ReStart_ADS1x9x(void);
 
+void ADS1x9x_Parse_data_packet(void);
 
 #endif /*ADS1x9x_H_*/

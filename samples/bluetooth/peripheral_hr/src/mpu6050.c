@@ -8,13 +8,7 @@
 #include <sensor.h>
 #include <device.h>
 
-/* size of stack area used by each thread */
-#define STACKSIZE 384
-
-/* scheduling priority used by each thread */
-#define PRIORITY 7
-
-static void mpu6050(void)
+void mpu6050(void)
 {
 	struct sensor_value intensity[3];
 	struct device *dev;
@@ -41,7 +35,3 @@ static void mpu6050(void)
 		k_sleep(1000);
 	}
 }
-
-
-K_THREAD_DEFINE(mpu6050_id, STACKSIZE, mpu6050, NULL, NULL, NULL,
-		PRIORITY, 0, K_NO_WAIT);

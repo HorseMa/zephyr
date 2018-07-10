@@ -48,9 +48,16 @@
 //*****************************************************************************
 // the includes
 //*****************************************************************************
-#include "ADS1x9x_Resp_Processing.h"
+#include <sensor.h>
+#include <misc/byteorder.h>
+#include <kernel.h>
+#include <misc/__assert.h>
+#ifndef __KERNEL__
+#include <stdlib.h>
+#endif
+#include "ADS1x9xTI.h"
+#include "ADS1x9x_RESP_Processing.h"
 #include "ADS1x9x_ECG_Processing.h"
-#include "mpy32.h"
 
 unsigned short Respiration_Rate = 0 ;
 //unsigned char RR_flag;
@@ -64,7 +71,6 @@ int RESP_Next_Sample = 0 ;
 int RESP_Second_Next_Sample = 0 ;
 
 
-#pragma NOINIT(RESP_WorkingBuff)
 short RESP_WorkingBuff[2 * FILTERORDER];
 //extern unsigned short Resp_Rr_val;
 extern unsigned char LeadStatus;
@@ -96,6 +102,7 @@ short RespCoeffBuf[FILTERORDER] = {
 };
 #endif
 
+#if 0
 void Resp_FilterProcess(short * RESP_WorkingBuff, short * CoeffBuf, short* FilterOut)
 {
      short i, Val_Hi, Val_Lo;
@@ -145,6 +152,7 @@ void Resp_FilterProcess(short * RESP_WorkingBuff, short * CoeffBuf, short* Filte
      *FilterOut = Val_Hi | Val_Lo;
 
 }
+#endif
 
 void Resp_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 {

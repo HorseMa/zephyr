@@ -462,13 +462,6 @@ int ads1x9x_read(struct device *dev, u8_t reg_addr,
 int ads1x9x_byte_read(struct device *dev, u8_t reg_addr, u8_t *byte);
 int ads1x9x_byte_write(struct device *dev, u8_t reg_addr, u8_t byte);
 int ads1x9x_word_write(struct device *dev, u8_t reg_addr, u16_t word);
-int ads1x9x_reg_field_update(struct device *dev, u8_t reg_addr,
-			    u8_t pos, u8_t mask, u8_t val);
-static inline int ads1x9x_reg_update(struct device *dev, u8_t reg_addr,
-				    u8_t mask, u8_t val)
-{
-	return ads1x9x_reg_field_update(dev, reg_addr, 0, mask, val);
-}
 int ads1x9x_trigger_mode_init(struct device *dev);
 int ads1x9x_trigger_set(struct device *dev,
 		       const struct sensor_trigger *trig,

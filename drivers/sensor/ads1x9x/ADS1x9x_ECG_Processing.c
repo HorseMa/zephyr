@@ -48,11 +48,13 @@
 //*****************************************************************************
 // the includes
 //*****************************************************************************
+#include <sensor.h>
+#include <misc/byteorder.h>
+#include <kernel.h>
+#include <misc/__assert.h>
 #include "ADS1x9x_ECG_Processing.h"
-#include "ADS1x9x_Resp_Processing.h"
-#include "ADS1x9x.h"
-#include "mpy32.h"
-#include "eUSCIA1_SPI.h"
+#include "ADS1x9x_RESP_Processing.h"
+#include "ADS1x9xTI.h"
 
 
 /*  Pointer which points to the index in B4 buffer where the processed data */
@@ -78,19 +80,14 @@ int QRS_Second_Next_Sample = 0 ;
 
 /* Flag which identifies the duration for which sample count has to be incremented */
 unsigned char Start_Sample_Count_Flag = 0;
-unsigned char first_peak_detect = FALSE ;
+unsigned char first_peak_detect = false ;
 unsigned int sample_count = 0 ;
-#pragma NOINIT(sample_index)
 unsigned int sample_index[MAX_PEAK_TO_SEARCH+2] ;
 
-#pragma NOINIT(ECG_ch0_WorkingBuff)
 short ECG_ch0_WorkingBuff[2 * FILTERORDER];
 
-#pragma NOINIT(ECG_WorkingBuff)
 short ECG_WorkingBuff[2 * FILTERORDER];
 
-#pragma NOINIT(ECGRawData)
-#pragma NOINIT(ECGFilteredData)
 short ECGRawData[4],ECGFilteredData[4];
 
 extern unsigned short Respiration_Rate;
@@ -98,7 +95,6 @@ extern unsigned char LeadStatus;
 unsigned char Filter_Option = 0;
 #if (FILTERORDER == 161)
 
-#pragma NOINIT(CoeffBuf_40Hz_LowPass)
 short CoeffBuf_40Hz_LowPass[FILTERORDER] = {
 
       -33,     19,     48,     44,      9,    -49,   -118,   -179,   -217,
@@ -121,7 +117,6 @@ short CoeffBuf_40Hz_LowPass[FILTERORDER] = {
      -179,   -118,    -49,      9,     44,     48,     19,    -33
 };
 
-#pragma NOINIT(CoeffBuf_60Hz_Notch)
 const short CoeffBuf_60Hz_Notch[FILTERORDER] = {
 /* Coeff for Notch @ 60Hz for 500SPS/60Hz Notch coeff13102008*/
       131,    -16,     85,     97,   -192,   -210,      9,    -37,    -11,
@@ -144,7 +139,6 @@ const short CoeffBuf_60Hz_Notch[FILTERORDER] = {
       -37,      9,   -210,   -192,     97,     85,    -16,    131
 };
 
-#pragma NOINIT(CoeffBuf_50Hz_Notch)
 const short CoeffBuf_50Hz_Notch[FILTERORDER] = {
 /* Coeff for Notch @ 50Hz @ 500 SPS*/
       -47,   -210,    -25,    144,     17,     84,    249,     24,   -177,
@@ -178,6 +172,7 @@ extern unsigned char ADS1x9xRegVal[];
 
 void ECG_FilterProcess(short * WorkingBuff, short * CoeffBuf, short* FilterOut)
 {
+    #if 0
     short i, Val_Hi, Val_Lo;
 
     RESHI = 0;
@@ -224,6 +219,7 @@ void ECG_FilterProcess(short * WorkingBuff, short * CoeffBuf, short* FilterOut)
      Val_Lo = RESLO >> 15;
      Val_Lo &= 0x01;
      *FilterOut = Val_Hi | Val_Lo;
+#endif
 
 }
 
@@ -359,9 +355,9 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
     static unsigned short s_array_index = 0 ;
     static unsigned short m_array_index = 0 ;
 
-    static unsigned char threshold_crossed = FALSE ;
+    static unsigned char threshold_crossed = false ;
     static unsigned short maxima_search = 0 ;
-    static unsigned char peak_detected = FALSE ;
+    static unsigned char peak_detected = false ;
     static unsigned short skip_window = 0 ;
     static long maxima_sum = 0 ;
     static unsigned int peak = 0;
@@ -371,7 +367,7 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
     unsigned short HRAvg;
 
 
-    if( TRUE == threshold_crossed  )
+    if( true == threshold_crossed  )
     {
         /*
         Once the sample value crosses the threshold check for the
@@ -391,12 +387,12 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
             maxima_sum += peak ;
             maxima_search = 0 ;
 
-            threshold_crossed = FALSE ;
-            peak_detected = TRUE ;
+            threshold_crossed = false ;
+            peak_detected = true ;
         }
 
     }
-    else if( TRUE == peak_detected )
+    else if( true == peak_detected )
     {
         /*
         Once the sample value goes below the threshold
@@ -408,7 +404,7 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
         if( skip_window >= MINIMUM_SKIP_WINDOW )
         {
             skip_window = 0 ;
-            peak_detected = FALSE ;
+            peak_detected = false ;
         }
 
         if( m_array_index == MAX_PEAK_TO_SEARCH )
@@ -474,7 +470,7 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
         Start_Sample_Count_Flag = 1;
         sample_count ++ ;
         m_array_index++;
-        threshold_crossed = TRUE ;
+        threshold_crossed = true ;
         peak = scaled_result ;
         nopeak = 0;
 
@@ -502,10 +498,10 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
             sample_index[2] = 0 ;
             sample_index[3] = 0 ;
             Start_Sample_Count_Flag = 0;
-            peak_detected = FALSE ;
+            peak_detected = false ;
             sample_sum = 0;
 
-            first_peak_detect = FALSE;
+            first_peak_detect = false;
             nopeak=0;
 
             QRS_Heart_Rate = 0;
@@ -527,9 +523,9 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
         sample_index[2] = 0 ;
         sample_index[3] = 0 ;
         Start_Sample_Count_Flag = 0;
-        peak_detected = FALSE ;
+        peak_detected = false ;
         sample_sum = 0;
-        first_peak_detect = FALSE;
+        first_peak_detect = false;
         nopeak = 0;
         QRS_Heart_Rate = 0;
         HR_flag = 1;
@@ -570,13 +566,13 @@ static void QRS_process_buffer( void )
         QRS_Threshold_Old = ((max *7) /10 ) ;
         QRS_Threshold_New = QRS_Threshold_Old ;
         if(max > 70)
-        first_peak_detect = TRUE ;
+        first_peak_detect = true ;
         max = 0;
         QRS_B4_Buffer_ptr = 0;
     }
 
 
-    if( TRUE == first_peak_detect )
+    if( true == first_peak_detect )
     {
         QRS_check_sample_crossing_threshold( scaled_result ) ;
     }

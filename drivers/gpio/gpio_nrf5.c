@@ -481,7 +481,10 @@ void nrf_gpiote_clear_port_event(void)
 static int gpio_nrf5_P0_init(struct device *dev)
 {
 	gpio_nrf5_init(dev);
-
+	gpio_nrf5_config(dev,
+			    GPIO_ACCESS_BY_PIN, 19, GPIO_DIR_OUT);
+	gpio_nrf5_write(dev,
+			   GPIO_ACCESS_BY_PIN, 19, 1);
 	return 0;
 }
 

@@ -44,29 +44,31 @@
 // $TI Release: PACKAGE NAME $
 // $Release Date: PACKAGE RELEASE DATE $
 //#############################################################################
-#include "ADS1x9x.h"
-#include "driverlib.h"
-#include "ADS1x9x_USB_Communication.h"
-#include "eUSCIA1_SPI.h"
-#include "StateMachine.h"
-#include "Executive.h"
+#include <sensor.h>
+#include <misc/byteorder.h>
+#include <kernel.h>
+#include <misc/__assert.h>
+#include "ADS1x9xTI.h"
+
 /**************************************************************************************************************************************************
 *         Prototypes                                                                                          *
 **************************************************************************************************************************************************/
+//! \brief This enum list all the possible ICs in the ADS1x9x family.
+//!
 
 /**************************************************************************************************************************************************
 *         Global Variables                                                                              *
 **************************************************************************************************************************************************/
 uint8_t ADC_Read_data[16];
 uint8_t ADS129x_SPI_cmd_Flag=0, ADS129x_SPI_data_Flag=0,  SPI_Send_count=0, SPI_Tx_Count = 0,SPI_Tx_buf[10];
-#pragma NOINIT(SPI_Rx_buf)
 uint8_t SPI_Rx_Data_Flag = 0,  SPI_Rx_buf[12], SPI_Rx_Count=0, SPI_Rx_exp_Count=0 ;
 uint8_t ECG_Data_rdy;
 long ADS1x9x_ECG_Data_buf[6];
+struct ADS1x9x_state ECG_Recoder_state;
 
 extern struct ADS1x9x_state ECG_Recoder_state;
 //extern uint8_t ECGRecorder_data_Buf[256], Recorder_head,Recorder_tail;
-extern uint8_t ECGRecorder_data_Buf[80], Recorder_head,Recorder_tail;
+uint8_t ECGRecorder_data_Buf[80], Recorder_head,Recorder_tail;
 //uint8_t ECGRecorder_data_Buf[256], Recorder_head,Recorder_tail;
 //extern struct ECGPage ECGPageBuf2_data;
 //extern uint8_t ECGRecorder_ACQdata_Buf[128];
@@ -79,7 +81,7 @@ extern uint8_t Store_data_rdy;
 
 /* ADS1x9x Register values*/
 
-extern uint8_t ADS1x9xRegVal[16] = {
+uint8_t ADS1x9xRegVal[16] = {
 
   //Device ID read Ony
   0x00,
@@ -106,7 +108,7 @@ extern uint8_t ADS1x9xRegVal[16] = {
   //GPIO
      0x0C
 };
-extern uint8_t ADS1x9xR_Default_Register_Settings[15] = {
+uint8_t ADS1x9xR_Default_Register_Settings[15] = {
 
   //Device ID read Ony
   0x00,
@@ -133,7 +135,7 @@ extern uint8_t ADS1x9xR_Default_Register_Settings[15] = {
   //GPIO
      0x0C
 };
-extern uint8_t ADS1x9x_Default_Register_Settings[15] = {
+uint8_t ADS1x9x_Default_Register_Settings[15] = {
 
   //Device ID read Ony
   0x00,
@@ -167,96 +169,49 @@ void ADS1x9x_Clock_Select(uint8_t clock_in)
 
   if (clock_in == 1)
     {
-      P2OUT |= (enum PORT2_ADC_CONTROL)ADC_CLK_SEL; // Choose internal clock input
+    // Choose internal clock input
     }
     else
     {
-      P2OUT &= ~(enum PORT2_ADC_CONTROL)ADC_CLK_SEL;  // Choose external clock input
+    // Choose external clock input
     }
 
 }
 
 void ADS1x9x_Reset(void)
 {
-  unsigned short i;
-  P2OUT |= (enum PORT2_ADC_CONTROL)ADC_RESET;   // Set High
-  /* Provide suficient dealy*/
-  for(i= 0; i < 5000; i++);           // Wait 1 mSec
-  P2OUT &= ~(enum PORT2_ADC_CONTROL)ADC_RESET;  // Set to low
-  for(i= 0; i < 5000; i++);             // Wait 1 mSec
-  P2OUT |= (enum PORT2_ADC_CONTROL)ADC_RESET;   // Set High
-  for(i= 0; i < 35000; i++);
 }
 
 void ADS1x9x_Disable_Start(void)
 {
-  unsigned short i;
-    P2OUT &= ~(enum PORT2_ADC_CONTROL)ADC_START;  // Set to LOW
-    for(i=0; i<35000; i++);                 // Small Delay to settle
 }
 
 void ADS1x9x_Enable_Start(void)
 {
-  unsigned short i;
-    P2OUT |= (enum PORT2_ADC_CONTROL)ADC_START;   // Set to High
-    for(i=0; i<50000; i++);                 // Small Delay to settle
 }
 
 void Set_ADS1x9x_Chip_Enable (void)
 {
-  /* ADS1x9x CS is Active low*/
-  P3OUT &= ~(enum PORT3_ADC_CONTROL)SPI_CS;   // Set to LOW
 }
 
 void Clear_ADS1x9x_Chip_Enable (void)
 {
-    uint8_t CsDelay;
-
-    for ( CsDelay = 0;  CsDelay < 100 ;CsDelay++);
-  /* ADS1x9x CS is Active low*/
-  P3OUT |= (enum PORT3_ADC_CONTROL)SPI_CS;    // Set to High
 }
 
 void Init_ADS1x9x_DRDY_Interrupt (void)
 {
-
-    P3DIR &= ~(enum PORT3_ADC_CONTROL)ADC_DRDY;
-    P3REN |= (enum PORT3_ADC_CONTROL)ADC_DRDY;                              // Enable P1.1 internal resistance
-    P3OUT |= (enum PORT3_ADC_CONTROL)ADC_DRDY;                              // Set P1.1 as pull-Up resistance
-    P3IES |= (enum PORT3_ADC_CONTROL)ADC_DRDY;                            // P1.1 Lo/Hi edge
-    P3IFG &= ~(enum PORT3_ADC_CONTROL)ADC_DRDY;                             // P1.1 IFG cleared
-    P3IE &= ~(enum PORT3_ADC_CONTROL)ADC_DRDY;                              // P1.1 interrupt disabled
-
 }
 
 void Enable_ADS1x9x_DRDY_Interrupt (void)
 {
-    P3IFG &= ~(enum PORT3_ADC_CONTROL)ADC_DRDY;                             // P1.1 IFG cleared
-    P3IE |= (enum PORT3_ADC_CONTROL)ADC_DRDY;                               // P1.1 interrupt enabled
 }
 
 void Disable_ADS1x9x_DRDY_Interrupt (void)
 {
-    P3IFG &= ~(enum PORT3_ADC_CONTROL)ADC_DRDY;                             // P1.1 IFG cleared
-    P3IE &= ~(enum PORT3_ADC_CONTROL)ADC_DRDY;                              // P1.1 interrupt disabled
 }
 
 void Set_DMA_SPI(void)
 {
-  DMACTL0 = DMA0TSEL_12;                      // USCI_B0 Transmit Ready Trigger
-  //DMA0SA = (void (*)())&UCB0RXBUF;            // Source block address
-  //DMA0DA = (void (*)())ADC_Read_data;         // Destination single address
-  DMA0SZ = 16;                                // Block size
-  DMA0CTL = DMADT_4 + DMADSTINCR_3 + DMADSTBYTE + DMASRCBYTE;
-  /* DMADT_4 - DMA transfer mode 4: Repeated Single transfer */
-  /* DMADSTINCR_3 - 11b = Destination address is incremented. */
-  /* DMADSTBYTE - DMA destination byte. This bit selects the destination as a byte or */
-  /* DMASRCBYTE - DMA source byte. This bit selects the source as a byte */
-
-                                              // Rpt, inc src, byte-byte
-  DMA0CTL |= DMAEN;                           // Enable DMA for consecutive Xfers
-
-
 }
 
 void ADS1x9x_SPI_Command_Data(uint8_t Data)
@@ -266,11 +221,6 @@ void ADS1x9x_SPI_Command_Data(uint8_t Data)
   for (delayVar = 0; delayVar < 50; delayVar++);
   Clear_ADS1x9x_Chip_Enable();
   Set_ADS1x9x_Chip_Enable();
-
-  UCA1TXBUF = Data;                                     // Send the data sitting at the pointer DATA to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );
-
-  delayVar = UCA1RXBUF;
 
   for (delayVar = 0; delayVar < 150; delayVar++);
 
@@ -298,7 +248,7 @@ void Soft_Reset_ADS1x9x (void)
 void ADS1x9x_PowerDown_Enable(void)
 {
   unsigned short i, j;
-  P2OUT &= ~(enum PORT2_ADC_CONTROL)ADC_RESET;  // Set to low
+  // Set to low
     for (j = 0; j < DELAY_COUNT; j++)
     {
       for ( i=0; i < 35000; i++);
@@ -308,7 +258,7 @@ void ADS1x9x_PowerDown_Enable(void)
 void ADS1x9x_PowerDown_Disable(void)
 {
   unsigned short i, j;
-  P2OUT |= (enum PORT2_ADC_CONTROL)ADC_RESET;   // Set High
+  // Set High
     for (j = 0; j < DELAY_COUNT; j++)
     {
       for ( i=0; i < 35000; i++);
@@ -323,7 +273,7 @@ void Soft_Start_ReStart_ADS1x9x (void)
 
 void Hard_Start_ReStart_ADS1x9x(void)
 {
-  P2OUT |= (enum PORT2_ADC_CONTROL)ADC_START;     // Set Start pin to High
+    // Set Start pin to High
 }
 
 void Soft_Start_ADS1x9x (void)
@@ -339,7 +289,7 @@ void Soft_Stop_ADS1x9x (void)
 void Hard_Stop_ADS1x9x (void)
 {
     unsigned short i, j;
-    P2OUT &= ~(enum PORT2_ADC_CONTROL)ADC_START;    // Set Start pin to Low
+    // Set Start pin to Low
     for (j = 0; j < DELAY_COUNT; j++)
     {
       for ( i=0; i < 35000; i++);
@@ -423,17 +373,7 @@ void ADS1x9x_Reg_Write (uint8_t READ_WRITE_ADDRESS, uint8_t DATA)
 
   for ( i =0; i < 50;i++);
 
-  UCA1TXBUF = SPI_Tx_buf[0];              // Send the first data to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );     // USCI_B0 TX buffer ready?
-  i = UCA1RXBUF;              // Read Rx buf
-
-  UCA1TXBUF = SPI_Tx_buf[1];              // Send the first data to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );     // USCI_B0 TX buffer ready?
-  i = UCA1RXBUF;
-  UCA1TXBUF = SPI_Tx_buf[2];              // Send the first data to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );     // USCI_B0 TX buffer ready?
-  i = UCA1RXBUF;
-
+  // Send the first data to the TX Buffer
 }
 
 uint8_t ADS1x9x_Reg_Read(uint8_t Reg_address)
@@ -445,15 +385,6 @@ uint8_t ADS1x9x_Reg_Read(uint8_t Reg_address)
   SPI_Tx_buf[1] = 0;              // Read number of bytes - 1
 
   Set_ADS1x9x_Chip_Enable();          // Set chip select to low
-
-  UCA1TXBUF = SPI_Tx_buf[0];                  // Send the first data to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );       // USCI_B0 TX buffer ready?
-  UCA1TXBUF = SPI_Tx_buf[1];                  // Send the first data to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );       // USCI_B0 TX buffer ready?
-  retVal = UCA1RXBUF;             // Read RX buff
-  UCA1TXBUF = 0x00;                           // Send the first data to the TX Buffer
-  while ( (UCA1STATW & UCBUSY) );       // USCI_B0 TX buffer ready?
-  retVal = UCA1RXBUF;             // Read RX buff
 
   Clear_ADS1x9x_Chip_Enable();        // Disable chip select
   return  retVal;
@@ -820,6 +751,7 @@ void ADS1x9x_Parse_data_packet(void)
 }
 
 
+#if 0
 #pragma vector=USCI_A1_VECTOR
 __interrupt void USCI_A1_ISR(void)
 {
@@ -855,6 +787,8 @@ __interrupt void USCI_A1_ISR(void)
   }
 }
 
+#endif
+#if 0
 #pragma vector=PORT3_VECTOR
 __interrupt void Port_3(void)
 {
@@ -868,6 +802,7 @@ __interrupt void Port_3(void)
     UCA1IE |= UCRXIE;               // Enable USCI_B0 RX interrupt
   }
 }
+#endif
 
 void Set_Device_out_bytes(void)
 {

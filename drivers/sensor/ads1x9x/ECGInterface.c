@@ -48,23 +48,21 @@
 //*****************************************************************************
 // the includes
 //*****************************************************************************
+#include <sensor.h>
+#include <misc/byteorder.h>
+#include <kernel.h>
+#include <misc/__assert.h>
 #include "ECGInterface.h"
-#include "ADS1x9x.h"
-#include "types.h"
-#include "NFCForumType4TagType.h"
-#include "StateMachine.h"
-#include <msp430.h>
-//#include "ADS1x9x_Nand_Flash.h"
+#include "ADS1x9xTI.h"
 #include "ADS1x9x_Version.h"
 
-#pragma NOINIT(ECGRxPacket)
 uint8_t ECGRxPacket[64],ECGRxCount, dumy ;
 
-#pragma NOINIT(ECGTxPacket)
 uint8_t ECGTxPacket[64],ECGTxCount,ECGTxPacketRdy;
 
 unsigned regval, Live_Streaming_flag;
 unsigned Req_Dwnld_occured;
+extern unsigned char Filter_Option;
 
 void ECGInterface_Init(void)
 {
@@ -135,9 +133,11 @@ void ECGInterface_powerMode1(void)
 {
 
 }
+#if 0
 void ECGInterface_RemoteWriteRegister(void)
 {
 
+#if 0
     unsigned short strcpy_i;
 
     if ( (ECGRxPacket[2] < 12))
@@ -151,9 +151,9 @@ void ECGInterface_RemoteWriteRegister(void)
         ADS1x9x_Reg_Write (ECGRxPacket[2], ECGRxPacket[3]);
         ADS1x9xRegVal[ECGRxPacket[2]] = ECGRxPacket[3];
 
-        //                        __delay_cycles(30);
+        //                        k_busy_wait(30);
         //                        Start_Read_Data_Continuous();         //RDATAC command
-        //                        __delay_cycles(30);
+        //                        k_busy_wait(30);
         //                        Enable_ADS1x9x_DRDY_Interrupt();
 
         ECG_Data_rdy = 0;
@@ -171,13 +171,15 @@ void ECGInterface_RemoteWriteRegister(void)
     }
 
     ECGTxCount = 7;
-    ECGTxPacketRdy = TRUE;
+    ECGTxPacketRdy = true;
 
+#endif
 }
 
 void ECGInterface_RemoteReadRegister(void)
 {
 
+#if 0
     unsigned short strcpy_i;
 
     if ( (FileTextE105[5] < 12))
@@ -190,9 +192,9 @@ void ECGInterface_RemoteReadRegister(void)
 
         FileTextE105[6] = ADS1x9x_Reg_Read (ECGRxPacket[2]);
         ADS1x9xRegVal[FileTextE105[5]] = FileTextE105[6];
-        __delay_cycles(300);
+        k_busy_wait(300);
         ECG_Data_rdy = 0;
-        ECG_Recoder_state.state = IDLE_STATE;
+        //ECG_Recoder_state.state = IDLE_STATE;
     }
     else
     {
@@ -205,30 +207,33 @@ void ECGInterface_RemoteReadRegister(void)
     }
 
     ECGTxCount = 7;
-    ECGTxPacketRdy = TRUE;
 
+    ECGTxPacketRdy = true;
+#endif
 }
 
+#endif
 void ECGInterface_StreamData(void)
 {
     ADS1x9x_Disable_Start();            //set ADC_START pin to LOW
 
     Clear_ADS1x9x_Chip_Enable();        //set SPI_CS pin to High
-    __delay_cycles(300);
+    k_busy_wait(300);
     Set_ADS1x9x_Chip_Enable();          //set SPI_CS pin to LOW
 
     Start_Read_Data_Continuous();       //RDATAC command
-    __delay_cycles(30);
+    k_busy_wait(30);
     Enable_ADS1x9x_DRDY_Interrupt();    // Enable DRDY interrupt
 
     ADS1x9x_Enable_Start();             //Set ADC_START pin to High
 
-    ECG_Recoder_state.state = DATA_STREAMING_STATE; // Set to Live Streaming state
-    Live_Streaming_flag = TRUE;             // Set Live Streaming Flag
+    //ECG_Recoder_state.state = DATA_STREAMING_STATE;   // Set to Live Streaming state
+    Live_Streaming_flag = true;             // Set Live Streaming Flag
     ECG_Data_rdy = 0;
     //Sleep
 }
 
+#if 0
 void ECGInterface_AcquireData(void)
 {
     short i_acq;
@@ -240,9 +245,10 @@ void ECGInterface_AcquireData(void)
         ADS1x9x_Disable_Start();                // Disable START (SET START to high)
 
         Set_ADS1x9x_Chip_Enable();              // CS = 0
-        __delay_cycles(300);
+        k_busy_wait(300);
         Clear_ADS1x9x_Chip_Enable();            // CS = 1
 
+#if 0
         UCA1CTL1 |= UCSWRST;                    // Enable SW reset
         UCA1CTL0 |= UCMSB+UCMST+UCSYNC;         //[b0]   1 -  Synchronous mode
                                                 //[b2-1] 00-  3-pin SPI
@@ -257,27 +263,28 @@ void ECGInterface_AcquireData(void)
         UCA1BR1 = 0;                            //
         UCA1CTL1 &= ~UCSWRST;                   // Clear SW reset, resume operation
 
+#endif
         NumPackets = ECGRxPacket[2];            // Parse the 16 bit sample count
         NumPackets = NumPackets << 8;
         NumPackets |= ECGRxPacket[3];
         ReqSamples = NumPackets;
         NumFrames = 0;
         ECGTxCount = 7;
-        ECGTxPacketRdy = TRUE;
+        ECGTxPacketRdy = true;
         BlockNum =5;
         //if ((ADS1x9xRegVal[1] & 0x07) == 6)
         if ((ADS1x9xRegVal[1] & 0x07) == 6)
         {
 //          NAND_Init();
 //          NAND_Reset();
-            __delay_cycles(300);
-            __delay_cycles(3000);
+            k_busy_wait(300);
+            k_busy_wait(3000);
             for ( i_acq= 1; i_acq < 4096; i_acq++)
             {
 //              NAND_EraseBlock(i_acq);         // Erase blank
             }
 
-            ECGTxPacketRdy = FALSE;
+            ECGTxPacketRdy = false;
             Store_data_rdy =0;
         }
 //      Recorder_head = 0;
@@ -288,10 +295,10 @@ void ECGInterface_AcquireData(void)
         AcqpacketCounter = 0;
 
         Set_ADS1x9x_Chip_Enable();              // CS =0
-        __delay_cycles(300);
+        k_busy_wait(300);
         Start_Read_Data_Continuous();           //RDATAC command
-        __delay_cycles(300);
-            ECG_Recoder_state.state = ACQUIRE_DATA_STATE;   // state = ACQUIRE_DATA_STATE
+        k_busy_wait(300);
+            //ECG_Recoder_state.state = ACQUIRE_DATA_STATE; // state = ACQUIRE_DATA_STATE
         ECG_Data_rdy = 0;
         Enable_ADS1x9x_DRDY_Interrupt();        // Enable DRDY interrupt
         ADS1x9x_Enable_Start();                 // Enable START (SET START to high)
@@ -314,21 +321,22 @@ void ECGInterface_AcquireData(void)
             ECGTxPacket[strcpy_i]=ECGRxPacket[strcpy_i];  // Prepare the outgoing string
         }
        ECGTxCount = 7;
-       ECGTxPacketRdy = TRUE;
+       ECGTxPacketRdy = true;
 
     }
 
 }
 
+#endif
 void ECGInterface_DownloadData(void)
 {
-    Req_Dwnld_occured = TRUE;
+    Req_Dwnld_occured = true;
 }
 
 void ECGInterface_FirmwareUpgrade(void)
 {
     Disable_ADS1x9x_DRDY_Interrupt();           // Disable interrupt
-    __delay_cycles(200);                        // Delay
+    k_busy_wait(200);                       // Delay
     ((void (*)())0x1000)();                     // Go to BSL
 }
 
@@ -347,7 +355,7 @@ void ECGInterface_FirmwareVersion(void)
     ECGTxPacket[3] = ADS1x9x_Minor_Number;      // Firmware Minor number
 
     ECGTxCount = 7;                             // number of bytes to send
-    ECGTxPacketRdy = TRUE;
+    ECGTxPacketRdy = true;
 }
 
 void ECGInterface_SelectFilter(void)
@@ -371,7 +379,7 @@ void ECGInterface_SelectFilter(void)
     }
 
     ECGTxCount = 7;
-    ECGTxPacketRdy = TRUE;
+    ECGTxPacketRdy = true;
 
 }
 
@@ -383,26 +391,26 @@ void ECGInterface_KeyPressed(void)
     ADS1x9x_Disable_Start();            // Disable START (SET START to high)
 
     Set_ADS1x9x_Chip_Enable();          // CS = 0
-    __delay_cycles(300);
+    k_busy_wait(300);
     Clear_ADS1x9x_Chip_Enable();        // CS = 1
-    __delay_cycles(30000);
-    __delay_cycles(30000);
+    k_busy_wait(30000);
+    k_busy_wait(30000);
     Set_ADS1x9x_Chip_Enable();          // CS =0
 
-    __delay_cycles(300);
+    k_busy_wait(300);
     Start_Read_Data_Continuous();       //RDATAC command
-    __delay_cycles(300);
+    k_busy_wait(300);
     Enable_ADS1x9x_DRDY_Interrupt();    // Enable DRDY interrupt
     ADS1x9x_Enable_Start();             // Enable START (SET START to high)
 
-    ECG_Recoder_state.state = ECG_RECORDING_STATE;
+    //ECG_Recoder_state.state = ECG_RECORDING_STATE;
 
 }
 
 void ECGInterface_KeyNotPressed(void)
 {
 
-    ECG_Recoder_state.state = IDLE_STATE;
+    //ECG_Recoder_state.state = IDLE_STATE;
     Disable_ADS1x9x_DRDY_Interrupt();       // Disable DRDY interrupt
     Stop_Read_Data_Continuous();            // SDATAC command
 

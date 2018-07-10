@@ -81,8 +81,13 @@
 //!
 #define FILTERORDER                 161
 
-#define TRUE    1
-#define FALSE   0
+#ifndef true
+#define true 1
+#endif
+
+#ifndef false
+#define false 0
+#endif
 
 //! \brief MUSCLE_ARTIFACT_FILTER
 //!

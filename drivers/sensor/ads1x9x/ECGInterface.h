@@ -52,6 +52,13 @@
 #ifndef ECGINTERFACE_H_
 #define ECGINTERFACE_H_
 
+#ifndef true
+#define true 1
+#endif
+
+#ifndef false
+#define false 0
+#endif
 //! \brief This #define variable defines the number of delay cycles in a delay
 //!         subroutine. An update to this file would be adding a state machine and
 //!         incorporating a timer.

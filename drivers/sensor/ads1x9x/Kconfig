@@ -21,14 +21,14 @@ config ADS1X9X_NAME
 config ADS1X9X_SPI_PORT_NAME
 	string "SPI master controller port name"
 	depends on ADS1X9X
-	default ""
+	default "SPI_1"
 	help
 	  Master SPI port name through which ADS1X9X chip is accessed.
 
 config ADS1X9X_SLAVE
 	int "ADS1X9X SPI slave select pin"
 	depends on ADS1X9X
-	default 0
+	default 24
 	help
 	  ADS1X9X chip select pin.
 
@@ -80,186 +80,51 @@ config ADS1X9X_THREAD_STACK_SIZE
 
 config ADS1X9X_GPIO_DEV_NAME
 	string "Gpio device"
-	default "GPIO_1"
+	default "GPIO_0"
 	depends on ADS1X9X && ADS1X9X_TRIGGER
 	help
-	  The name of the GPIO device to which the ADS1X9X interrupt pin is
+	  The name of the GPIO device to which the ADS1X9X start&ready&reset pin is
 	  connected.
 
-config ADS1X9X_GPIO_PIN_NUM
+config ADS1X9X_READY_GPIO_PIN_NUM
 	int "Interrupt GPIO pin number"
-	default 4
+	default 23
 	depends on ADS1X9X && ADS1X9X_TRIGGER
 	help
 	  The number of the GPIO pin which is connected to ADS1X9X interrupt pin.
 
-choice
-	prompt "Accelerometer power mode"
+config ADS1X9X_START_GPIO_PIN_NUM
+	int "Start GPIO pin number"
+	default 21
 	depends on ADS1X9X
-	default ADS1X9X_ACCEL_PMU_RUNTIME
+	help
+	  The number of the GPIO pin which is connected to ADS1X9X start pin.
 
-config ADS1X9X_ACCEL_PMU_RUNTIME
+config ADS1X9X_RESET_GPIO_PIN_NUM
+	int "Reset GPIO pin number"
+	default 22
+	depends on ADS1X9X
+	help
+	  The number of the GPIO pin which is connected to ADS1X9X reset pin.
+
+choice
+	prompt "Ads1x9x power mode"
+	depends on ADS1X9X
+	default ADS1X9X_PMU_RUNTIME
+
+config ADS1X9X_PMU_RUNTIME
 	bool "Set at runtime."
 	depends on ADS1X9X
 
-config ADS1X9X_ACCEL_PMU_SUSPEND
+config ADS1X9X_PMU_SUSPEND
 	bool "suspended/not used"
 	depends on ADS1X9X
 
-config ADS1X9X_ACCEL_PMU_NORMAL
+config ADS1X9X_PMU_NORMAL
 	bool "normal"
 	depends on ADS1X9X
 
-config ADS1X9X_ACCEL_PMU_LOW_POWER
+config ADS1X9X_PMU_LOW_POWER
 	bool "low power"
 	depends on ADS1X9X
-endchoice
-
-choice
-	prompt "Accelerometer range setting"
-	depends on ADS1X9X && (ADS1X9X_ACCEL_PMU_RUNTIME || ADS1X9X_ACCEL_PMU_NORMAL || ADS1X9X_ACCEL_PMU_LOW_POWER)
-	default ADS1X9X_ACCEL_RANGE_RUNTIME
-
-config ADS1X9X_ACCEL_RANGE_RUNTIME
-	bool "Set at runtime."
-
-config ADS1X9X_ACCEL_RANGE_2G
-	bool "2G"
-
-config ADS1X9X_ACCEL_RANGE_4G
-	bool "4G"
-
-config ADS1X9X_ACCEL_RANGE_8G
-	bool "8G"
-
-config ADS1X9X_ACCEL_RANGE_16G
-	bool "16G"
-endchoice
-
-choice
-	prompt "Accelerometer sampling frequency."
-	depends on ADS1X9X && (ADS1X9X_ACCEL_PMU_RUNTIME || ADS1X9X_ACCEL_PMU_NORMAL || ADS1X9X_ACCEL_PMU_LOW_POWER)
-	default ADS1X9X_ACCEL_ODR_RUNTIME
-
-config ADS1X9X_ACCEL_ODR_RUNTIME
-	bool "Set at runtime."
-
-config ADS1X9X_ACCEL_ODR_25_32
-	depends on ADS1X9X_ACCEL_PMU_LOW_POWER
-	bool "0.78 Hz"
-
-config ADS1X9X_ACCEL_ODR_25_16
-	depends on ADS1X9X_ACCEL_PMU_LOW_POWER
-	bool "1.56 Hz"
-
-config ADS1X9X_ACCEL_ODR_25_8
-	depends on ADS1X9X_ACCEL_PMU_LOW_POWER
-	bool "3.125 Hz"
-
-config ADS1X9X_ACCEL_ODR_25_4
-	depends on ADS1X9X_ACCEL_PMU_LOW_POWER
-	bool "6.25 Hz"
-
-config ADS1X9X_ACCEL_ODR_25_2
-	bool "12.5 Hz"
-
-config ADS1X9X_ACCEL_ODR_25
-	bool "25 Hz"
-
-config ADS1X9X_ACCEL_ODR_50
-	bool "50 Hz"
-
-config ADS1X9X_ACCEL_ODR_100
-	bool "100 Hz"
-
-config ADS1X9X_ACCEL_ODR_200
-	bool "200 Hz"
-
-config ADS1X9X_ACCEL_ODR_400
-	bool "400 Hz"
-
-config ADS1X9X_ACCEL_ODR_800
-	bool "800 Hz"
-
-config ADS1X9X_ACCEL_ODR_1600
-	bool "1600 Hz"
-endchoice
-
-choice
-	prompt "Gyroscope power mode"
-	depends on ADS1X9X
-	default ADS1X9X_GYRO_PMU_RUNTIME
-
-config ADS1X9X_GYRO_PMU_RUNTIME
-	bool "Set at runtime."
-	depends on ADS1X9X
-
-config ADS1X9X_GYRO_PMU_SUSPEND
-	bool "suspended/not used"
-	depends on ADS1X9X
-
-config ADS1X9X_GYRO_PMU_NORMAL
-	bool "normal"
-	depends on ADS1X9X
-
-config ADS1X9X_GYRO_PMU_FAST_STARTUP
-	bool "fast start-up"
-	depends on ADS1X9X
-endchoice
-
-choice
-	prompt "Gyroscope range setting."
-	depends on ADS1X9X && (ADS1X9X_GYRO_PMU_RUNTIME || ADS1X9X_GYRO_PMU_NORMAL || ADS1X9X_GYRO_PMU_FAST_STARTUP)
-	default ADS1X9X_GYRO_RANGE_RUNTIME
-
-config ADS1X9X_GYRO_RANGE_RUNTIME
-	bool "Set at runtime."
-
-config ADS1X9X_GYRO_RANGE_2000DPS
-	bool "2000 DPS"
-
-config ADS1X9X_GYRO_RANGE_1000DPS
-	bool "1000 DPS"
-
-config ADS1X9X_GYRO_RANGE_500DPS
-	bool "500 DPS"
-
-config ADS1X9X_GYRO_RANGE_250DPS
-	bool "250 DPS"
-
-config ADS1X9X_GYRO_RANGE_125DPS
-	bool "125 DPS"
-endchoice
-
-choice
-	prompt "Gyroscope sampling frequency."
-	depends on ADS1X9X && (ADS1X9X_GYRO_PMU_RUNTIME || ADS1X9X_GYRO_PMU_NORMAL || ADS1X9X_GYRO_PMU_FAST_STARTUP)
-	default ADS1X9X_GYRO_ODR_RUNTIME
-
-config ADS1X9X_GYRO_ODR_RUNTIME
-	bool "Set at runtime."
-
-config ADS1X9X_GYRO_ODR_25
-	bool "25 Hz"
-
-config ADS1X9X_GYRO_ODR_50
-	bool "50 Hz"
-
-config ADS1X9X_GYRO_ODR_100
-	bool "100 Hz"
-
-config ADS1X9X_GYRO_ODR_200
-	bool "200 Hz"
-
-config ADS1X9X_GYRO_ODR_400
-	bool "400 Hz"
-
-config ADS1X9X_GYRO_ODR_800
-	bool "800 Hz"
-
-config ADS1X9X_GYRO_ODR_1600
-	bool "1600 Hz"
-
-config ADS1X9X_GYRO_ODR_3200
-	bool "3200 Hz"
 endchoice

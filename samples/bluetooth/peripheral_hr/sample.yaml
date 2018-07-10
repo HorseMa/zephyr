@@ -1,5 +1,6 @@
 sample:
   description: TBD
+    using K_THREAD_DEFINE
   name: TBD
 tests:
   test:

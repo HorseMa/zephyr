@@ -99,6 +99,11 @@ static struct bt_conn_auth_cb auth_cb_display = {
 	.cancel = auth_cancel,
 };
 
+#define STACK_SIZE		1024
+K_THREAD_STACK_DEFINE(stack, STACK_SIZE);
+static struct k_thread thread_data;
+void mpu6050(void);
+
 void main(void)
 {
 	int err;
@@ -112,6 +117,9 @@ void main(void)
 	bt_conn_cb_register(&conn_callbacks);
 	bt_conn_auth_cb_register(&auth_cb_display);
 
+	k_thread_create(&thread_data, stack, STACK_SIZE,
+		(k_thread_entry_t) mpu6050,
+		NULL, NULL, NULL, K_PRIO_COOP(7), 0, 0);
 	/* Implement notification. At the moment there is no suitable way
 	 * of starting delayed work so we do it here
 	 */
