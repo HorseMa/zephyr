@@ -29,8 +29,8 @@ void mpu6050(void)
 
 		sensor_channel_get(dev, SENSOR_CHAN_ACCEL_XYZ, intensity);
 
-		printk("ambient light intensity without"
-				" trigger is %d, %d, %d\n", intensity[0].val1, intensity[1].val1, intensity[2].val1);
+		//printk("ambient light intensity without"
+		//		" trigger is %d, %d, %d\n", intensity[0].val1, intensity[1].val1, intensity[2].val1);
 
 		k_sleep(1000);
 	}

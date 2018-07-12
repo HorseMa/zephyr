@@ -50,6 +50,14 @@
 #ifndef ADS1x9x_ECG_PROCESSING_H_
 #define ADS1x9x_ECG_PROCESSING_H_
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+
+#ifndef FALSE
+#define FALSE 0
+#endif
+
 //! \brief MAX_PEAK_TO_SEARCH
 //!
 #define MAX_PEAK_TO_SEARCH              5
