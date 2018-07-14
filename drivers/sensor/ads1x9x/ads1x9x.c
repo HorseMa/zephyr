@@ -15,7 +15,7 @@
 #include <misc/__assert.h>
 
 #include "ads1x9x.h"
-
+#define delay(x)	k_busy_wait(1000);
 struct ads1x9x_device_data ads1x9x_data;
 u8_t ads1x9xregval[12] = {0};
 static u8_t SPI_Rx_exp_Count = 0;
@@ -140,7 +140,8 @@ int ads1x9x_read_reg(struct device *dev, u8_t reg_addr, u8_t *byte)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
 	u8_t tx_buf[2],tx_byte,rx_buf[2];
-
+	const struct ads1x9x_device_config *cfg = dev->config->config_info;
+	int res;
 	tx_buf[0] = reg_addr | RREG;
 	tx_buf[1] = 0x00;
 	tx_byte = 0;
@@ -172,15 +173,26 @@ int ads1x9x_read_reg(struct device *dev, u8_t reg_addr, u8_t *byte)
 		.buffers = buf_rx,
 		.count = 2
 	};
-
-	return spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	//digitalWrite(ADS1292_CS_PIN, HIGH);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+  	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+	res = spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
 }
 
 int ads1x9x_read_all_reg(struct device *dev, u8_t *regs)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
 	u8_t tx_buf[2],tx_buf_dumy[12] = {0},rx_buf[2];
-
+	const struct ads1x9x_device_config *cfg = dev->config->config_info;
+	int res;
 	tx_buf[0] = 0 | RREG;
 	tx_buf[1] = 11;
 	const struct spi_buf buf_tx[2] = {
@@ -211,15 +223,27 @@ int ads1x9x_read_all_reg(struct device *dev, u8_t *regs)
 		.buffers = buf_rx,
 		.count = 2
 	};
-
-	return spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	//digitalWrite(ADS1292_CS_PIN, HIGH);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+  	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+	res = spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	return res;
 }
 
 int ads1x9x_read_data(struct device *dev, u8_t *data)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	const struct ads1x9x_device_config *cfg = dev->config->config_info;
 	u8_t tx_buf[9] = {0};
-
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
 	const struct spi_buf buf_tx[1] = {
 		{
 			.buf = tx_buf,
@@ -247,8 +271,46 @@ int ads1x9x_read_data(struct device *dev, u8_t *data)
 int ads1x9x_write_reg(struct device *dev, u8_t reg_addr, u8_t byte)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	const struct ads1x9x_device_config *cfg = dev->config->config_info;
 	u8_t tx_buf[2],rx_buf[2],rx_byte;
+	int res;
+	switch (reg_addr)
+  	{
+  		case 1:
+  			byte = byte & 0x87;
+  		break;
+  		case 2:
+  			byte = byte & 0xFB;
+  			byte |= byte;
 
+  		break;
+  		case 3:
+  			byte = byte & 0xFD;
+  			byte |= 0x10;
+
+  		break;
+  		case 7:
+  			byte = byte & 0x3F;
+  		break;
+  		case 8:
+  			byte = byte & 0x5F;
+  		break;
+  		case 9:
+  			byte |= 0x02;
+  		break;
+  		case 10:
+  			byte = byte & 0x87;
+  			byte |= 0x01;
+  		break;
+  		case 11:
+  			byte = byte & 0x0F;
+  		break;
+
+  		default:
+
+  		break;
+
+  	}
 	tx_buf[0] = reg_addr | WREG;
 	tx_buf[1] = 0x00;
 	const struct spi_buf buf_tx[2] = {
@@ -279,8 +341,19 @@ int ads1x9x_write_reg(struct device *dev, u8_t reg_addr, u8_t byte)
 		.buffers = buf_rx,
 		.count = 2
 	};
-
-	return spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	//digitalWrite(ADS1292_CS_PIN, HIGH);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+  	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+	res = spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	return res;
 }
 
 int ads1x9x_write_all_default_regs(struct device *dev)
@@ -308,7 +381,8 @@ int ads1x9x_write_all_default_regs(struct device *dev)
 int ads1x9x_write_cmd(struct device *dev, u8_t cmd)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
-
+	const struct ads1x9x_device_config *cfg = dev->config->config_info;
+	int res;
 	const struct spi_buf buf_tx[1] = {
 		{
 			.buf = &cmd,
@@ -319,8 +393,19 @@ int ads1x9x_write_cmd(struct device *dev, u8_t cmd)
 		.buffers = buf_tx,
 		.count = 1
 	};
-
-	return spi_write(ads1x9x->spi, &ads1x9x->spi_cfg, &tx);
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	//digitalWrite(ADS1292_CS_PIN, HIGH);
+  	delay(2);
+  	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+  	//digitalWrite(ADS1292_CS_PIN, LOW);
+  	delay(2);
+	res = spi_write(ads1x9x->spi, &ads1x9x->spi_cfg, &tx);
+	delay(2);
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+	return res;
 }
 
 static int ads1x9x_pmu_set(struct device *dev, union ads1x9x_pmu_status *pmu_sts)
@@ -408,12 +493,12 @@ int ads1x9x_init(struct device *dev)
 
 	ads1x9x->spi_cfg.operation = (((SPI_WORD_SET(8) | SPI_MODE_CPHA) & (~SPI_MODE_CPOL)) | SPI_TRANSFER_MSB);
 	ads1x9x->spi_cfg.frequency = CONFIG_ADS1X9X_SPI_BUS_FREQ;
-	ads1x9x->spi_cfg.slave = CONFIG_ADS1X9X_SLAVE;
+	ads1x9x->spi_cfg.slave = 20;
 
 	/* compass not supported, yet */
 	//ads1x9x->pmu_sts.mag = ADS1X9X_PMU_SUSPEND;
 
-	ads1x9x_reset(dev);
+	/*ads1x9x_reset(dev);
 
  	k_busy_wait(5000);
     // Set internal clock
@@ -443,8 +528,8 @@ int ads1x9x_init(struct device *dev)
 	printk("regs value is :\r\n");
 	for(u8_t i = 0;i < 12;i++)
 		printk("%02X ",ads1x9xregval[i]);
-	printk("\r\n");
-	ads1x9x_set_out_bytes();
+	printk("\r\n");*/
+	//ads1x9x_set_out_bytes();
 	//ads1x9x_powerdown(dev);
 #ifdef CONFIG_ADS1X9X_TRIGGER
 	if (ads1x9x_trigger_mode_init(dev) < 0) {
@@ -452,11 +537,44 @@ int ads1x9x_init(struct device *dev)
 		return -EINVAL;
 	}
 #endif
-	ads1x9x_disable_start(dev);
+	/*ads1x9x_disable_start(dev);
 	k_busy_wait(1000);
 	ads1x9x_write_cmd (dev, RDATAC);
 	k_busy_wait(1000);
-	ads1x9x_enable_start(dev);
+	ads1x9x_enable_start(dev);*/
+	  ads1x9x_reset(dev);
+	  delay(100);
+
+	  ads1x9x_disable_start(dev);
+	  ads1x9x_enable_start(dev);
+
+	  ads1x9x_disable_start(dev);
+	  ads1x9x_write_cmd (dev, START_);          // Send 0x08 to the ADS1x9x
+	  //ads1292_Start_Data_Conv_Command();
+	  ads1x9x_write_cmd (dev, STOP);
+	  //ads1292_Soft_Stop();
+	  delay(50);
+	  ads1x9x_write_cmd (dev, SDATAC);
+	  //ads1292_Stop_Read_Data_Continuous();					// SDATAC command
+	  delay(300);
+	  ads1x9x_read_all_reg(dev,ads1x9xregval);
+		printk("regs value is :\r\n");
+		for(u8_t i = 0;i < 12;i++)
+		printk("%02X ",ads1x9xregval[i]);
+		printk("\r\n");
+		ads1x9x_set_out_bytes();
+	  ads1x9x_write_all_default_regs(dev);
+	  delay(10);
+	  ads1x9x_read_all_reg(dev,ads1x9xregval);
+	printk("regs value is :\r\n");
+	for(u8_t i = 0;i < 12;i++)
+		printk("%02X ",ads1x9xregval[i]);
+	printk("\r\n");
+	ads1x9x_write_cmd (dev, RDATAC);
+	  //ads1292_Start_Read_Data_Continuous();
+	  delay(10);
+	  //ads1292_Enable_Start();
+	  ads1x9x_enable_start(dev);
 	dev->driver_api = &ads1x9x_api;
 
 	return 0;
@@ -468,6 +586,7 @@ const struct ads1x9x_device_config ads1x9x_config = {
 	.int_pin = CONFIG_ADS1X9X_READY_GPIO_PIN_NUM,
 	.start_pin = CONFIG_ADS1X9X_START_GPIO_PIN_NUM,
 	.reset_pin = CONFIG_ADS1X9X_RESET_GPIO_PIN_NUM,
+	.cs_pin = CONFIG_ADS1X9X_SLAVE,
 #endif
 };
 

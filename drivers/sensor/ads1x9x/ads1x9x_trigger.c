@@ -158,25 +158,25 @@ unsigned int sample_index[MAX_PEAK_TO_SEARCH+2] ;
 
 void Resp_FilterProcess(short * RESP_WorkingBuff, short * CoeffBuf, short* FilterOut)
 {
-	short i;
-	s32_t temp = 0;
+  int32_t acc = 0;   // accumulator for MACs
+  int  k;
 
-	temp = 0;
-	for ( i = 0; i < FILTERORDER/10; i++)
-	{
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-		temp += (*RESP_WorkingBuff-- * *CoeffBuf ++);
-	}
-
-	*FilterOut = temp;
+  // perform the multiply-accumulate
+  for ( k = 0; k < 161; k++ )
+  {
+    acc += (int32_t)(*CoeffBuf++) * (int32_t)(*RESP_WorkingBuff--);
+  }
+  // saturate the result
+  if ( acc > 0x3fffffff )
+  {
+    acc = 0x3fffffff;
+  } else if ( acc < -0x40000000 )
+  {
+    acc = -0x40000000;
+  }
+  // convert from Q30 to Q15
+  *FilterOut = (int16_t)(acc >> 15);
+  //*FilterOut = *WorkingBuff;
 #if 0
 	RESHI = 0;
 	RESLO = 0;
@@ -284,7 +284,7 @@ void Respiration_Rate_Detection(short Resp_wave)
 	static unsigned char startCalc=0, PtiveEdgeDetected=0, NtiveEdgeDetected=0, peakCount = 0;
 	static unsigned short PeakCount[8];
 
-	printk("%s\r\n",__func__);
+	//printk("%s\r\n",__func__);
 	SampleCount++;
 	SampleCountNtve++;
 	TimeCnt++;
@@ -431,25 +431,25 @@ void RESP_Algorithm_Interface(short CurrSample)
 
 void ECG_FilterProcess(short * WorkingBuff, short * CoeffBuf, short* FilterOut)
 {
-	short i;
-	s32_t temp = 0;
+  int32_t acc = 0;   // accumulator for MACs
+  int  k;
 
-	temp = 0;
-	for ( i = 0; i < FILTERORDER/10; i++)
-	{
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-		temp += (*WorkingBuff-- * *CoeffBuf ++);
-	}
-
-	*FilterOut = temp;
+  // perform the multiply-accumulate
+  for ( k = 0; k < 161; k++ )
+  {
+    acc += (int32_t)(*CoeffBuf++) * (int32_t)(*WorkingBuff--);
+  }
+  // saturate the result
+  if ( acc > 0x3fffffff )
+  {
+    acc = 0x3fffffff;
+  } else if ( acc < -0x40000000 )
+  {
+    acc = -0x40000000;
+  }
+  // convert from Q30 to Q15
+  *FilterOut = (int16_t)(acc >> 15);
+  //*FilterOut = *WorkingBuff;
 #if 0
 	RESHI = 0;
 	RESLO = 0;
@@ -641,7 +641,7 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
     unsigned short max = 0 ;
     unsigned short HRAvg;
 
-    printk("%s\r\n",__func__);
+    //printk("%s\r\n",__func__);
     if( true == threshold_crossed  )
     {
         /*
@@ -1025,6 +1025,7 @@ void ADS1292x_Parse_data_packet(void)
     //ADS1x9x_ECG_Data_buf[0] = 3 byte status (24 bits)
     //ADS1x9x_ECG_Data_buf[1] = 3 bytes ch1 data
     //ADS1x9x_ECG_Data_buf[2] = 3 bytes CH0 data
+    //printk("%d,%d\n",ADS1x9x_ECG_Data_buf[1],ADS1x9x_ECG_Data_buf[2]);
 }
 
 void ADS1x9x_Parse_data_packet(void)
@@ -1069,14 +1070,14 @@ static void ads1x9x_handle_interrupts(void *arg)
 	//printk("ads1x9x data ready!!!\r\n");
 
 	ads1x9x_read_data(dev,SPI_Rx_buf);
-	for(u8_t i = 0;i < 9;i++)
+	/*for(u8_t i = 0;i < 9;i++)
 	{
 		printk("%02X ",SPI_Rx_buf[i]);
 	}
-	printk("\r\n");
+	printk("\r\n");*/
 	ADS1x9x_Parse_data_packet();
-	printk("QRS_Heart_Rate = %d\r\n",QRS_Heart_Rate);
-	printk("Respiration_Rate = %d\r\n",Respiration_Rate);
+	//printk("QRS_Heart_Rate = %d\r\n",QRS_Heart_Rate);
+	//printk("Respiration_Rate = %d\r\n",Respiration_Rate);
 }
 
 #ifdef CONFIG_ADS1X9X_TRIGGER_OWN_THREAD

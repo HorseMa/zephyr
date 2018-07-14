@@ -653,6 +653,7 @@ struct ads1x9x_device_config {
 	u8_t int_pin;
 	u8_t start_pin;
 	u8_t reset_pin;
+	u8_t cs_pin;
 #endif
 };
 
