@@ -184,7 +184,8 @@ void Resp_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 
     /* Store the DC removed value in RESP_WorkingBuff buffer in millivolts range*/
     RESP_WorkingBuff[bufCur] = RESPData;
-    ECG_FilterProcess(&RESP_WorkingBuff[bufCur],RespCoeffBuf,(short*)&FiltOut);
+    ADC_DLLB(RESPData,1,(short*)&FiltOut);
+    //ECG_FilterProcess(&RESP_WorkingBuff[bufCur],RespCoeffBuf,(short*)&FiltOut);
     /* Store the DC removed value in Working buffer in millivolts range*/
     RESP_WorkingBuff[bufStart] = RESPData;
 

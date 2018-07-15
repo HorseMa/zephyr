@@ -26,21 +26,21 @@ static uint8_t ADS1x9xR_Default_Register_Settings[15] = {
    	//CONFIG1
 	 0x02,
     //CONFIG2
-     0xE0,
+     0xE1,
     //LOFF
      0xF0,
 	 //CH1SET (PGA gain = 6)
-     0x00,
+     0x15,
 	 //CH2SET (PGA gain = 6)
-     0x00,
+     0x15,
 	 //RLD_SENS (default)
-	 0x2C,
+	 0x00,
 	 //LOFF_SENS (default)
-	 0x0F,
+	 0x00,
     //LOFF_STAT
      0x00,
     //RESP1
-     0xEA,
+     0x02,
 	//RESP2
 	 0x03,
 	//GPIO
@@ -185,6 +185,7 @@ int ads1x9x_read_reg(struct device *dev, u8_t reg_addr, u8_t *byte)
 	res = spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
 	delay(2);
   	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+  	return res;
 }
 
 int ads1x9x_read_all_reg(struct device *dev, u8_t *regs)
@@ -242,8 +243,10 @@ int ads1x9x_read_data(struct device *dev, u8_t *data)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
 	const struct ads1x9x_device_config *cfg = dev->config->config_info;
+	int res;
 	u8_t tx_buf[9] = {0};
 	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
+	k_busy_wait(10);
 	const struct spi_buf buf_tx[1] = {
 		{
 			.buf = tx_buf,
@@ -265,7 +268,9 @@ int ads1x9x_read_data(struct device *dev, u8_t *data)
 		.count = 1
 	};
 
-	return spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	res = spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
+	k_busy_wait(10);
+	return res;
 }
 
 int ads1x9x_write_reg(struct device *dev, u8_t reg_addr, u8_t byte)
@@ -343,15 +348,15 @@ int ads1x9x_write_reg(struct device *dev, u8_t reg_addr, u8_t byte)
 	};
 	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
 	//digitalWrite(ADS1292_CS_PIN, LOW);
-  	delay(2);
+  	k_busy_wait(2);
   	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
   	//digitalWrite(ADS1292_CS_PIN, HIGH);
-  	delay(2);
+  	k_busy_wait(2);
   	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
   	//digitalWrite(ADS1292_CS_PIN, LOW);
-  	delay(2);
+  	k_busy_wait(2);
 	res = spi_transceive(ads1x9x->spi, &ads1x9x->spi_cfg, &tx, &rx);
-	delay(2);
+	k_busy_wait(2);
   	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
   	return res;
 }
@@ -365,6 +370,7 @@ int ads1x9x_write_all_default_regs(struct device *dev)
 		for ( Reg_Init_i = 1; Reg_Init_i < 12; Reg_Init_i++)
 		{
 			ads1x9x_write_reg(dev,Reg_Init_i,ADS1x9xR_Default_Register_Settings[Reg_Init_i]);
+			printk("ads1x9xR default regs value\r\n");
 		}
 	}
 	else
@@ -408,58 +414,15 @@ int ads1x9x_write_cmd(struct device *dev, u8_t cmd)
 	return res;
 }
 
-static int ads1x9x_pmu_set(struct device *dev, union ads1x9x_pmu_status *pmu_sts)
-{
-	return 0;
-}
-
-static int ads1x9x_attr_set(struct device *dev, enum sensor_channel chan,
-		    enum sensor_attribute attr, const struct sensor_value *val)
-{
-	return 0;
-}
-
-static int ads1x9x_sample_fetch(struct device *dev, enum sensor_channel chan)
-{
-	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
-
-	__ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL);
-
-	return 0;
-}
-
-static void ads1x9x_channel_convert(enum sensor_channel chan,
-				   u16_t scale,
-				   u16_t *raw_xyz,
-				   struct sensor_value *val)
-{
-
-}
-
-static int ads1x9x_temp_channel_get(struct device *dev, struct sensor_value *val)
-{
-	u16_t temp_raw = 0;
-	s32_t temp_micro = 0;
-	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
-
-	return 0;
-}
-
-static int ads1x9x_channel_get(struct device *dev,
-			      enum sensor_channel chan,
-			      struct sensor_value *val)
-{
-
-	return 0;
-}
-
 static const struct sensor_driver_api ads1x9x_api = {
+	#if 0
 	.attr_set = ads1x9x_attr_set,
 #ifdef CONFIG_ADS1X9X_TRIGGER
 	.trigger_set = ads1x9x_trigger_set,
 #endif
 	.sample_fetch = ads1x9x_sample_fetch,
 	.channel_get = ads1x9x_channel_get,
+	#endif
 };
 
 int ads1x9x_init(struct device *dev)
@@ -483,6 +446,13 @@ int ads1x9x_init(struct device *dev)
 			   GPIO_DIR_OUT | GPIO_PUD_PULL_UP);
 	gpio_pin_write(ads1x9x->gpio, cfg->reset_pin,1);
 
+	gpio_pin_configure(ads1x9x->gpio, cfg->cs_pin,
+			   GPIO_DIR_OUT | GPIO_PUD_PULL_UP);
+	gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,1);
+
+	gpio_pin_configure(ads1x9x->gpio, 20,
+			   GPIO_DIR_OUT | GPIO_PUD_PULL_UP);
+	gpio_pin_write(ads1x9x->gpio, 20,1);
 
 	ads1x9x->spi = device_get_binding(CONFIG_ADS1X9X_SPI_PORT_NAME);
 	if (!ads1x9x->spi) {
@@ -493,7 +463,7 @@ int ads1x9x_init(struct device *dev)
 
 	ads1x9x->spi_cfg.operation = (((SPI_WORD_SET(8) | SPI_MODE_CPHA) & (~SPI_MODE_CPOL)) | SPI_TRANSFER_MSB);
 	ads1x9x->spi_cfg.frequency = CONFIG_ADS1X9X_SPI_BUS_FREQ;
-	ads1x9x->spi_cfg.slave = 20;
+	ads1x9x->spi_cfg.slave = 33;
 
 	/* compass not supported, yet */
 	//ads1x9x->pmu_sts.mag = ADS1X9X_PMU_SUSPEND;
@@ -542,6 +512,50 @@ int ads1x9x_init(struct device *dev)
 	ads1x9x_write_cmd (dev, RDATAC);
 	k_busy_wait(1000);
 	ads1x9x_enable_start(dev);*/
+	ads1x9x_reset(dev);
+  delay(100);
+  ads1x9x_disable_start(dev);
+  ads1x9x_enable_start(dev);
+
+  ads1x9x_disable_start(dev);
+  ads1x9x_read_all_reg(dev,ads1x9xregval);
+  ads1x9x_write_cmd (dev, START_);
+  ads1x9x_write_cmd (dev, STOP);
+  delay(50);
+  ads1x9x_write_cmd (dev, SDATAC);					// SDATAC command
+  delay(300);
+
+  ads1x9x_write_reg(dev,1, 0x00); 		//Set sampling rate to 125 SPS
+  delay(10);
+  ads1x9x_write_reg(dev,2, 0xa3);	//Lead-off comp off, test signal disabled
+  //ads1x9x_write_reg(dev,2, 0b10100000);	//Lead-off comp off, test signal disabled
+  delay(10);
+  ads1x9x_write_reg(dev,3, 0b00010000);		//Lead-off defaults
+  delay(10);
+  //ads1x9x_write_reg(dev,4, 0x15);	//Ch 1 enabled, gain 6, connected to electrode in
+  ads1x9x_write_reg(dev,4, 0b01000000);	//Ch 1 enabled, gain 6, connected to electrode in
+  delay(10);
+  //ads1x9x_write_reg(dev,5, 0x15);	//Ch 2 enabled, gain 6, connected to electrode in
+  ads1x9x_write_reg(dev,5, 0b01100000);	//Ch 2 enabled, gain 6, connected to electrode in
+  delay(10);
+  ads1x9x_write_reg(dev,6, 0b00101100);	//RLD settings: fmod/16, RLD enabled, RLD inputs from Ch2 only
+  delay(10);
+  ads1x9x_write_reg(dev,7, 0x00);		//LOFF settings: all disabled
+  delay(10);
+														//Skip register 8, LOFF Settings default
+  //ads1x9x_write_reg(dev,9, 0x00);		//Respiration: MOD/DEMOD turned only, phase 0
+  ads1x9x_write_reg(dev,9, 0b11110010);		//Respiration: MOD/DEMOD turned only, phase 0
+  delay(10);
+  //ads1x9x_write_reg(dev,10, 0b10000011);		//Respiration: Calib OFF, respiration freq defaults
+  ads1x9x_write_reg(dev,10, 0b00000011);		//Respiration: Calib OFF, respiration freq defaults
+  delay(10);
+  ads1x9x_write_reg(dev,11, 0x0c);
+  ads1x9x_read_all_reg(dev,ads1x9xregval);
+  ads1x9x_set_out_bytes();
+  ads1x9x_write_cmd (dev, RDATAC);
+  delay(10);
+  ads1x9x_enable_start(dev);
+  #if 0
 	  ads1x9x_reset(dev);
 	  delay(100);
 
@@ -575,6 +589,8 @@ int ads1x9x_init(struct device *dev)
 	  delay(10);
 	  //ads1292_Enable_Start();
 	  ads1x9x_enable_start(dev);
+	  #endif
+  gpio_pin_write(ads1x9x->gpio, cfg->cs_pin,0);
 	dev->driver_api = &ads1x9x_api;
 
 	return 0;

@@ -62,24 +62,24 @@ short RespCoeffBuf[FILTERORDER] = {
 #if (FILTERORDER == 161)
 short CoeffBuf_40Hz_LowPass[FILTERORDER] = {
 
-      -33,     19,     48,     44,      9,    -49,   -118,   -179,   -217,
-     -222,   -191,   -131,    -57,     13,     61,     74,     48,    -12,
-      -92,   -173,   -233,   -257,   -237,   -178,    -92,     -1,     73,
-      110,     99,     40,    -52,   -156,   -246,   -299,   -299,   -244,
-     -145,    -26,     83,    155,    170,    119,     14,   -123,   -257,
-     -355,   -389,   -347,   -234,    -75,     91,    224,    286,    256,
-      135,    -53,   -266,   -449,   -555,   -547,   -417,   -186,     97,
-      365,    547,    584,    447,    145,   -271,   -711,  -1067,  -1230,
-    -1111,   -664,    100,   1114,   2259,   3386,   4334,   4967,   5189,
-     4967,   4334,   3386,   2259,   1114,    100,   -664,  -1111,  -1230,
-    -1067,   -711,   -271,    145,    447,    584,    547,    365,     97,
-     -186,   -417,   -547,   -555,   -449,   -266,    -53,    135,    256,
-      286,    224,     91,    -75,   -234,   -347,   -389,   -355,   -257,
-     -123,     14,    119,    170,    155,     83,    -26,   -145,   -244,
-     -299,   -299,   -246,   -156,    -52,     40,     99,    110,     73,
-       -1,    -92,   -178,   -237,   -257,   -233,   -173,    -92,    -12,
-       48,     74,     61,     13,    -57,   -131,   -191,   -222,   -217,
-     -179,   -118,    -49,      9,     44,     48,     19,    -33
+  -72,    122,    -31,    -99,    117,      0,   -121,    105,     34,
+  -137,     84,     70,   -146,     55,    104,   -147,     20,    135,
+  -137,    -21,    160,   -117,    -64,    177,    -87,   -108,    185,
+  -48,   -151,    181,      0,   -188,    164,     54,   -218,    134,
+  112,   -238,     90,    171,   -244,     33,    229,   -235,    -36,
+  280,   -208,   -115,    322,   -161,   -203,    350,    -92,   -296,
+  361,      0,   -391,    348,    117,   -486,    305,    264,   -577,
+  225,    445,   -660,     93,    676,   -733,   -119,    991,   -793,
+  -480,   1486,   -837,  -1226,   2561,   -865,  -4018,   9438,  20972,
+  9438,  -4018,   -865,   2561,  -1226,   -837,   1486,   -480,   -793,
+  991,   -119,   -733,    676,     93,   -660,    445,    225,   -577,
+  264,    305,   -486,    117,    348,   -391,      0,    361,   -296,
+  -92,    350,   -203,   -161,    322,   -115,   -208,    280,    -36,
+  -235,    229,     33,   -244,    171,     90,   -238,    112,    134,
+  -218,     54,    164,   -188,      0,    181,   -151,    -48,    185,
+  -108,    -87,    177,    -64,   -117,    160,    -21,   -137,    135,
+  20,   -147,    104,     55,   -146,     70,     84,   -137,     34,
+  105,   -121,      0,    117,    -99,    -31,    122,    -72
 };
 
 const short CoeffBuf_60Hz_Notch[FILTERORDER] = {
@@ -127,12 +127,33 @@ const short CoeffBuf_50Hz_Notch[FILTERORDER] = {
 };
 #endif
 
+unsigned int DL_ADC[2][125]=    //缓冲区
+   {
+      {0},
+	  {0},
+   };
+
+void ADC_DLLB(short in, u8_t index,short *out)    //队列滚动滤波, DL_long: 滤波队列长度
+{
+    unsigned char i=0;
+ 	long temp=0;
+	for(i = 0;i < 124;i++)
+	{
+		DL_ADC[index][124 - i] = DL_ADC[index][123 - i];
+	}
+	DL_ADC[index][0] = in;
+	for(i = 0;i < 125;i++)
+	{
+		temp += DL_ADC[index][i];
+	}
+	*out = temp / 125;
+}
 static  uint8_t SPI_Rx_Data_Flag = 0,  SPI_Rx_buf[12];
 extern u8_t ads1x9xregval[];
 static long ADS1x9x_ECG_Data_buf[6];
 static  short ECGRawData[4],ECGFilteredData[4] ;
 static  unsigned short QRS_Heart_Rate;
-static unsigned char Filter_Option = 3;
+static unsigned char Filter_Option = 0;
 static short ECG_WorkingBuff[2 * FILTERORDER];
 static short ECG_ch0_WorkingBuff[2 * FILTERORDER];
 static short ECG_WorkingBuff[2 * FILTERORDER];
@@ -254,6 +275,7 @@ void Resp_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 
 	/* Store the DC removed value in RESP_WorkingBuff buffer in millivolts range*/
 	RESP_WorkingBuff[bufCur] = RESPData;
+	//ADC_DLLB(RESPData,1,(short*)&FiltOut);
 	ECG_FilterProcess(&RESP_WorkingBuff[bufCur],RespCoeffBuf,(short*)&FiltOut);
 	/* Store the DC removed value in Working buffer in millivolts range*/
 	RESP_WorkingBuff[bufStart] = RESPData;
@@ -540,6 +562,7 @@ void ECG_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 
 	/* Store the DC removed value in Working buffer in millivolts range*/
 	ECG_WorkingBuff[ECG_bufCur] = ECGData;
+	//ADC_DLLB(ECGData,0,(short*)&FiltOut);
 	ECG_FilterProcess(&ECG_WorkingBuff[ECG_bufCur],CoeffBuf,(short*)&FiltOut);
 	/* Store the DC removed value in ECG_WorkingBuff buffer in millivolts range*/
 	ECG_WorkingBuff[ECG_bufStart] = ECGData;
@@ -881,6 +904,8 @@ void QRS_Algorithm_Interface(short CurrSample)
 void ADS1x9x_Filtered_ECG(void)
 {
 	//ADS1x9x_ECG_Data_buf[1] = 0-ADS1x9x_ECG_Data_buf[1];
+	//printk("%s\r\n",__func__);
+	static int loop = 0;
 	switch( ads1x9xregval[0] & 0x03)
 	{
 
@@ -942,6 +967,8 @@ void ADS1x9x_Filtered_ECG(void)
 
 			   Resp_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
 			   ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
+			   printk("%d,%d,%d\n",loop++,ECGRawData[0],ECGRawData[1]);
+			   //printk("%d,%d,%d\n",loop++,ECGFilteredData[0],ECGFilteredData[1]);
 			   RESP_Algorithm_Interface(ECGFilteredData[0]);
 			   QRS_Algorithm_Interface(ECGFilteredData[1]);
 			}
@@ -1011,7 +1038,7 @@ void ADS1291_Parse_data_packet(void)
 void ADS1292x_Parse_data_packet(void)
 {
 	uint8_t ECG_Chan_num;
-
+	//static int loop = 0;
 	for (ECG_Chan_num = 0; ECG_Chan_num < 3; ECG_Chan_num++)
 	{
 		ADS1x9x_ECG_Data_buf[ECG_Chan_num] = (signed long)SPI_Rx_buf[3*ECG_Chan_num];
@@ -1025,7 +1052,8 @@ void ADS1292x_Parse_data_packet(void)
     //ADS1x9x_ECG_Data_buf[0] = 3 byte status (24 bits)
     //ADS1x9x_ECG_Data_buf[1] = 3 bytes ch1 data
     //ADS1x9x_ECG_Data_buf[2] = 3 bytes CH0 data
-    //printk("%d,%d\n",ADS1x9x_ECG_Data_buf[1],ADS1x9x_ECG_Data_buf[2]);
+    //printk("%c,%c",ADS1x9x_ECG_Data_buf[1]>>16,ADS1x9x_ECG_Data_buf[2]>>16);
+    //printk("%d,%d,%d\n",loop++,ADS1x9x_ECG_Data_buf[1],ADS1x9x_ECG_Data_buf[2]);
 }
 
 void ADS1x9x_Parse_data_packet(void)
@@ -1066,16 +1094,28 @@ void ADS1x9x_Parse_data_packet(void)
 static void ads1x9x_handle_interrupts(void *arg)
 {
 	struct device *dev = (struct device *)arg;
-
+	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	static int level = 0;
+	//level = level ^ 1;
 	//printk("ads1x9x data ready!!!\r\n");
-
+	//gpio_pin_write(ads1x9x->gpio, 20,level);
 	ads1x9x_read_data(dev,SPI_Rx_buf);
 	/*for(u8_t i = 0;i < 9;i++)
 	{
 		printk("%02X ",SPI_Rx_buf[i]);
 	}
-	printk("\r\n");*/
+	//printk("\r\n");*/
 	ADS1x9x_Parse_data_packet();
+	if((level ++) % 2)
+	{
+		//ads1x9x_write_reg(dev,11,0x03);
+		//gpio_pin_write(ads1x9x->gpio, 20,1);
+	}
+	else
+	{
+		//ads1x9x_write_reg(dev,11,0x00);
+		//gpio_pin_write(ads1x9x->gpio, 20,0);
+	}
 	//printk("QRS_Heart_Rate = %d\r\n",QRS_Heart_Rate);
 	//printk("Respiration_Rate = %d\r\n",Respiration_Rate);
 }
@@ -1118,12 +1158,14 @@ static void ads1x9x_gpio_callback(struct device *port,
 
 	ARG_UNUSED(port);
 	ARG_UNUSED(pin);
-
+#if 1
 #if defined(CONFIG_ADS1X9X_TRIGGER_OWN_THREAD)
 	k_sem_give(&ads1x9x->sem);
 #elif defined(CONFIG_ADS1X9X_TRIGGER_GLOBAL_THREAD)
 	k_work_submit(&ads1x9x->work);
 #endif
+#endif
+//ads1x9x_handle_interrupts(ads1x9x->dev);
 }
 
 int ads1x9x_trigger_set(struct device *dev,
