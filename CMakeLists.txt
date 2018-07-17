@@ -66,7 +66,7 @@ zephyr_compile_definitions(
   __ZEPHYR__=1
 )
 
-if(NOT CONFIG_COVERAGE)
+if(NOT CONFIG_NO_OPTIMIZATIONS)
 zephyr_compile_definitions(
   _FORTIFY_SOURCE=2
 )
@@ -428,13 +428,20 @@ else()
   set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS ${syscalls_subdirs_txt})
 endif()
 
+# SYSCALL_INCLUDE_DIRECTORY will include the directories that needs to be
+# searched for syscall declarations if CONFIG_APPLICATION_DEFINED_SYSCALL is set
+if(CONFIG_APPLICATION_DEFINED_SYSCALL)
+  set(SYSCALL_INCLUDE_DIRECTORY --include ${APPLICATION_SOURCE_DIR})
+endif()
+
 add_custom_command(
   OUTPUT
   ${syscalls_json}
   COMMAND
   ${PYTHON_EXECUTABLE}
   ${ZEPHYR_BASE}/scripts/parse_syscalls.py
-  --include          ${ZEPHYR_BASE}/include        # Read files from this dir
+   --include          ${ZEPHYR_BASE}/include        # Read files from this dir
+  ${SYSCALL_INCLUDE_DIRECTORY}
   --json-file        ${syscalls_json}              # Write this file
   DEPENDS ${syscalls_subdirs_trigger} ${PARSE_SYSCALLS_HEADER_DEPENDS}
   )
@@ -1133,19 +1140,19 @@ list_append_ifdef(CONFIG_CHECK_LINK_MAP
 list_append_ifdef(
   CONFIG_BUILD_OUTPUT_HEX
   post_build_commands
-  COMMAND ${CMAKE_OBJCOPY} -S -Oihex   -R .comment -R COMMON -R .eh_frame  ${KERNEL_ELF_NAME}    ${KERNEL_HEX_NAME}
+  COMMAND ${CMAKE_OBJCOPY} -S -Oihex --gap-fill 0xFF  -R .comment -R COMMON -R .eh_frame  ${KERNEL_ELF_NAME}    ${KERNEL_HEX_NAME}
   )
 
 list_append_ifdef(
   CONFIG_BUILD_OUTPUT_BIN
   post_build_commands
-  COMMAND ${CMAKE_OBJCOPY} -S -Obinary -R .comment -R COMMON -R .eh_frame  ${KERNEL_ELF_NAME}    ${KERNEL_BIN_NAME}
+  COMMAND ${CMAKE_OBJCOPY} -S -Obinary --gap-fill 0xFF -R .comment -R COMMON -R .eh_frame  ${KERNEL_ELF_NAME}    ${KERNEL_BIN_NAME}
   )
 
 list_append_ifdef(
   CONFIG_BUILD_OUTPUT_S19
   post_build_commands
-  COMMAND ${CMAKE_OBJCOPY} --srec-len 1 --output-target=srec ${KERNEL_ELF_NAME} ${KERNEL_S19_NAME}
+  COMMAND ${CMAKE_OBJCOPY} --gap-fill 0xFF --srec-len 1 --output-target=srec ${KERNEL_ELF_NAME} ${KERNEL_S19_NAME}
   )
 
 list_append_ifdef(
