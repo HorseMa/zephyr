@@ -524,18 +524,18 @@ int ads1x9x_init(struct device *dev)
   delay(50);
   ads1x9x_write_cmd (dev, SDATAC);					// SDATAC command
   delay(300);
-
-  ads1x9x_write_reg(dev,1, 0x00); 		//Set sampling rate to 125 SPS
+  ads1x9x_write_reg(dev,1, 0x02); 		//Set sampling rate to 500 SPS
+  //ads1x9x_write_reg(dev,1, 0x00); 		//Set sampling rate to 125 SPS
   delay(10);
   ads1x9x_write_reg(dev,2, 0xa3);	//Lead-off comp off, test signal disabled
   //ads1x9x_write_reg(dev,2, 0b10100000);	//Lead-off comp off, test signal disabled
   delay(10);
   ads1x9x_write_reg(dev,3, 0b00010000);		//Lead-off defaults
   delay(10);
-  //ads1x9x_write_reg(dev,4, 0x15);	//Ch 1 enabled, gain 6, connected to electrode in
-  ads1x9x_write_reg(dev,4, 0b01000000);	//Ch 1 enabled, gain 6, connected to electrode in
+  ads1x9x_write_reg(dev,4, 0x40);	//Ch 1 enabled, gain 6, connected to electrode in
+  //ads1x9x_write_reg(dev,4, 0b01100000);	//Ch 1 enabled, gain 6, connected to electrode in
   delay(10);
-  //ads1x9x_write_reg(dev,5, 0x15);	//Ch 2 enabled, gain 6, connected to electrode in
+  //ads1x9x_write_reg(dev,5, 0x00);	//Ch 2 enabled, gain 6, connected to electrode in
   ads1x9x_write_reg(dev,5, 0b01100000);	//Ch 2 enabled, gain 6, connected to electrode in
   delay(10);
   ads1x9x_write_reg(dev,6, 0b00101100);	//RLD settings: fmod/16, RLD enabled, RLD inputs from Ch2 only
@@ -544,10 +544,10 @@ int ads1x9x_init(struct device *dev)
   delay(10);
 														//Skip register 8, LOFF Settings default
   //ads1x9x_write_reg(dev,9, 0x00);		//Respiration: MOD/DEMOD turned only, phase 0
-  ads1x9x_write_reg(dev,9, 0b11110010);		//Respiration: MOD/DEMOD turned only, phase 0
+  ads1x9x_write_reg(dev,9, 0b11101010);		//Respiration: MOD/DEMOD turned only, phase 0
   delay(10);
-  //ads1x9x_write_reg(dev,10, 0b10000011);		//Respiration: Calib OFF, respiration freq defaults
-  ads1x9x_write_reg(dev,10, 0b00000011);		//Respiration: Calib OFF, respiration freq defaults
+  ads1x9x_write_reg(dev,10, 0b10000011);		//Respiration: Calib OFF, respiration freq defaults
+  //ads1x9x_write_reg(dev,10, 0b00000011);		//Respiration: Calib OFF, respiration freq defaults
   delay(10);
   ads1x9x_write_reg(dev,11, 0x0c);
   ads1x9x_read_all_reg(dev,ads1x9xregval);
