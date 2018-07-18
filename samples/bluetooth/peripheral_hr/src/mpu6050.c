@@ -8,6 +8,7 @@
 #include <sensor.h>
 #include <device.h>
 #include "mymath.h"
+#include <math.h>
 
 #ifndef TRUE
 #define TRUE     1
@@ -42,14 +43,14 @@ void mpu6050(void)
 		/*printk("ambient light intensity without"
 				" trigger is %d, %d, %d\n", intensity[0].val1, intensity[1].val1, intensity[2].val1);*/
 		stepcounts = Step_Count(intensity[0].val1,intensity[1].val1,intensity[2].val1);
-		k_sleep(10);
+		k_sleep(20);
 	}
 }
 
 
 
 
-#define P_P_DIFF	1000 /* 波峰-波谷的差值，即3D阈值 */
+#define P_P_DIFF	3 /* 波峰-波谷的差值，即3D阈值 */
 #define RISING_EDGE  1 /* 上升沿状态 */
 #define FALLING_EDGE 0 /* 下降沿状态 */
 #define FAST_WALK_TIME_LIMIT_MS	200 	/* ms */
@@ -78,7 +79,8 @@ unsigned long Step_Count(float axis0, float axis1, float axis2){
 	int ppDiff = 0;
 	int64_t timeDiff = 0;
 	/* 获取3D IMU */
-	nowPos = (unsigned int)pow_ff(mysqrtf(axis0) + mysqrtf(axis1) + mysqrtf(axis2), 0.5);
+	nowPos = sqrtf(axis0 * axis0 + axis1 * axis1 + axis2 * axis2);
+	//nowPos = (unsigned int)powf(sqrtf(axis0) + sqrtf(axis1) + sqrtf(axis2), 0.5);
 	//printk("nowPos = %d,lastPos = %d\n",nowPos,lastPos);
 	/* 得到波峰和波谷 */
 	if((pSta==RISING_EDGE) && (nowPos<=lastPos)){
@@ -101,16 +103,18 @@ unsigned long Step_Count(float axis0, float axis1, float axis2){
 	if(walkSta==TRUE){
 		walkSta = FALSE;
 		ppDiff = newMax - newMin; /* 波峰与波谷的差值 */
+		//printk("ppDiff = %d\n",ppDiff);
 		if(ppDiff > P_P_DIFF){
+			//printk("threhold\n");
 			timeDiff = k_uptime_delta(&lastTime);	/* 获取波峰和波谷的时间差 */
 			if(timeDiff < FAST_WALK_TIME_LIMIT_MS){  /* 波峰波谷时间差小于200ms的直接去掉 */
-				printk("<200ms\n");
+				//printk("<200ms\n");
 				return stepCount;
 			}
 			else if(timeDiff > SLOW_WALK_TIME_LIMIT_MS){ /* 波峰波谷时间差大于10s的视为静止 */
 				walkOkSta = FALSE;
 				stepOK = 0;
-				printk(">10s\n");
+				//printk(">10s\n");
 				return stepCount;
 			}
 			stepOK++;
@@ -124,7 +128,7 @@ unsigned long Step_Count(float axis0, float axis1, float axis2){
 	if(walkOkSta==TRUE){ /* 满足10s内走7步 */
 		stepCount += stepOK;
 		stepOK = 0;
-		printk("step count = %d\n",stepCount);
+		//printk("step count = %d\n",stepCount);
 	}
 	return stepCount;
 }
