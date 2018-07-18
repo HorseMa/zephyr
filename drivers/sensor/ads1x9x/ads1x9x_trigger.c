@@ -386,7 +386,7 @@ void Respiration_Rate_Detection(short Resp_wave)
 								PeakCount[4] + PeakCount[5] + PeakCount[6] + PeakCount[7];
 						PtiveCnt = PtiveCnt >> 3;
 						Respiration_Rate = 6000/PtiveCnt;	// 60 * 100/SampleCount;
-						printk("Respiration_Rate = %d\r\n",Respiration_Rate);
+						//printk("Respiration_Rate = %d\r\n",Respiration_Rate);
 					}
 				}
 			}
@@ -727,7 +727,7 @@ static void QRS_check_sample_crossing_threshold( unsigned short scaled_result )
             // Compute HR without checking LeadOffStatus
             QRS_Heart_Rate = (unsigned short) 60 *  SAMPLING_RATE;
             QRS_Heart_Rate =  QRS_Heart_Rate/ HRAvg ;
-            printk("QRS_Heart_Rate = %d\r\n",QRS_Heart_Rate);
+            //printk("QRS_Heart_Rate = %d\r\n",QRS_Heart_Rate);
             if(QRS_Heart_Rate > 250)
                 QRS_Heart_Rate = 250 ;
 #endif

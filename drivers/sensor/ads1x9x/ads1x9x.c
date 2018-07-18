@@ -464,7 +464,6 @@ int ads1x9x_init(struct device *dev)
 	ads1x9x->spi_cfg.operation = (((SPI_WORD_SET(8) | SPI_MODE_CPHA) & (~SPI_MODE_CPOL)) | SPI_TRANSFER_MSB);
 	ads1x9x->spi_cfg.frequency = CONFIG_ADS1X9X_SPI_BUS_FREQ;
 	ads1x9x->spi_cfg.slave = 33;
-
 	/* compass not supported, yet */
 	//ads1x9x->pmu_sts.mag = ADS1X9X_PMU_SUSPEND;
 
@@ -532,11 +531,11 @@ int ads1x9x_init(struct device *dev)
   delay(10);
   ads1x9x_write_reg(dev,3, 0b00010000);		//Lead-off defaults
   delay(10);
-  ads1x9x_write_reg(dev,4, 0x40);	//Ch 1 enabled, gain 6, connected to electrode in
+  ads1x9x_write_reg(dev,4, 0b01000000);	//Ch 1 enabled, gain 6, connected to electrode in
   //ads1x9x_write_reg(dev,4, 0b01100000);	//Ch 1 enabled, gain 6, connected to electrode in
   delay(10);
   //ads1x9x_write_reg(dev,5, 0x00);	//Ch 2 enabled, gain 6, connected to electrode in
-  ads1x9x_write_reg(dev,5, 0b01100000);	//Ch 2 enabled, gain 6, connected to electrode in
+  ads1x9x_write_reg(dev,5, 0b00000000);	//Ch 2 enabled, gain 6, connected to electrode in
   delay(10);
   ads1x9x_write_reg(dev,6, 0b00101100);	//RLD settings: fmod/16, RLD enabled, RLD inputs from Ch2 only
   delay(10);
