@@ -18,7 +18,6 @@ static int max30205_channel_get(struct device *dev,
 			       struct sensor_value *val)
 {
 	struct max30205_data *drv_data = dev->driver_data;
-	s32_t conv_val;
 
 	__ASSERT_NO_MSG(chan == SENSOR_CHAN_AMBIENT_TEMP);
 
@@ -26,10 +25,9 @@ static int max30205_channel_get(struct device *dev,
 	 * see "Interpreting humidity and temperature readings" document
 	 * for more details
 	 */
-	conv_val = drv_data->temp_degc;
 			/* convert temperature x8 to degrees Celsius */
-			val->val1 = conv_val;
-			val->val2 = 0;
+			val->val1 = drv_data->temp_degc;
+			val->val2 = drv_data->adc_12bit;
 
 	return 0;
 }
@@ -60,6 +58,19 @@ static int max30205_sample_fetch(struct device *dev, enum sensor_channel chan)
 
 	drv_data->temp_degc = buf[1] | (buf[0] << 8);
 
+	if(i2c_read(drv_data->i2c, buf,
+			   2, 0x4d) < 0) {
+		printk("Failed to fetch data sample.");
+		return -EIO;
+	}
+	/*if (i2c_reg_read16(drv_data->i2c, MCP3221_I2C_ADDR,
+			   MCP3221_REG_TEMP,
+			   buf) < 0) {
+		printk("Failed to fetch data sample.");
+		return -EIO;
+	}*/
+
+	drv_data->adc_12bit = buf[1] | (buf[0] << 8);
 	return 0;
 }
 

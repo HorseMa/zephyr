@@ -27,6 +27,7 @@
 struct max30205_data {
 	struct device *i2c;
 	u16_t temp_degc;
+	u16_t adc_12bit;
 };
 
 #endif /* __SENSOR_MAX30205__ */

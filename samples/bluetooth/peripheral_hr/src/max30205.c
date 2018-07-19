@@ -40,9 +40,9 @@ void max30205(void)
 		}
 
 		/* display temperature */
-		printk("Temperature:%d,%fC\n", temp.val1,(float)temp.val1 * MAX30205_TEMP_STEP);
+		printk("Temperature:%d,%d,%fC\n", temp.val1,temp.val2,(float)temp.val1 * MAX30205_TEMP_STEP);
 
-		k_sleep(2000);
+		k_sleep(200);
 	}
 }
 
