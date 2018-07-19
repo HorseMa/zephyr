@@ -21,6 +21,14 @@ config MAX30205_NAME
 	help
 	  Device name with which the MAX30205 sensor is identified.
 
+config MAX30205_I2C_ADDR
+	hex
+	prompt "I2c address"
+	default 0x48
+	depends on MAX30205
+	help
+	  Device addr with which the MAX30205 sensor is identified.
+
 config MAX30205_I2C_MASTER_DEV_NAME
 	string
 	prompt "I2C master where MAX30205 is connected"
@@ -31,75 +39,3 @@ config MAX30205_I2C_MASTER_DEV_NAME
 	  connected.
 
 endif
-
-choice
-	prompt "Trigger mode"
-	depends on MAX30205
-	default MAX30205_TRIGGER_GLOBAL_THREAD
-	help
-	  Specify the type of triggering to be used by the driver.
-
-config MAX30205_TRIGGER_NONE
-	bool
-	prompt "No trigger"
-
-config MAX30205_TRIGGER_GLOBAL_THREAD
-	bool
-	prompt "Use global thread"
-	depends on GPIO
-	select MAX30205_TRIGGER
-
-config MAX30205_TRIGGER_OWN_THREAD
-	bool
-	prompt "Use own thread"
-	depends on GPIO
-	select MAX30205_TRIGGER
-
-endchoice
-
-config MAX30205_TRIGGER
-	bool
-	depends on MAX30205
-
-config MAX30205_GPIO_DEV_NAME
-	string
-	prompt "GPIO device"
-	default "GPIO_0"
-	depends on MAX30205 && MAX30205_TRIGGER
-	help
-	  The device name of the GPIO device to which the MAX30205 interrupt pin
-	  is connected.
-
-config MAX30205_GPIO_PIN_NUM
-	int
-	prompt "Interrupt GPIO pin number"
-	default 0
-	depends on MAX30205 && MAX30205_TRIGGER
-	help
-	  The number of the GPIO on which the interrupt signal from the MAX30205
-	  chip will be received.
-
-config MAX30205_THREAD_PRIORITY
-	int
-	prompt "Thread priority"
-	depends on MAX30205 && MAX30205_TRIGGER_OWN_THREAD
-	default 10
-	help
-	  Priority of thread used by the driver to handle interrupts.
-
-config MAX30205_THREAD_STACK_SIZE
-	int
-	prompt "Thread stack size"
-	depends on MAX30205 && MAX30205_TRIGGER_OWN_THREAD
-	default 1024
-	help
-	  Stack size of thread used by the driver to handle interrupts.
-
-config MAX30205_ODR
-	string
-	prompt "Output data rate"
-	depends on MAX30205
-	default "1"
-	help
-	  Sensor output data rate expressed in samples per second.
-	  Data rates supported by the chip are 1, 7 and 12.5.
