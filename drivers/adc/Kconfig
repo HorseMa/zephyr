@@ -12,10 +12,19 @@
 menuconfig ADC
 	bool
 	prompt "ADC drivers"
+	# All platforms that implement the ADC driver are now required to
+	# provide relevant DTS entries.
+	select HAS_DTS_ADC
 	help
-	  Enable ADC (Analog to Digital Converter) driver configuration
+	  Enable ADC (Analog to Digital Converter) driver configuration.
 
 if ADC
+
+config ADC_ASYNC
+	bool "Enable asynchronous call support"
+	select POLL
+	help
+	  This option enables the asynchronous API calls.
 
 config SYS_LOG_ADC_LEVEL
 	int
@@ -77,6 +86,8 @@ config ADC_1_IRQ_PRI
 source "drivers/adc/Kconfig.dw"
 
 source "drivers/adc/Kconfig.mcux"
+
+source "drivers/adc/Kconfig.nrfx"
 
 source "drivers/adc/Kconfig.qmsi"
 

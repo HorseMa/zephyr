@@ -25,6 +25,7 @@
 
 void gpsbeidou(void)
 {
+	#if 0
 	struct device *gpio_dev;
 	unsigned char *p,*pend;
 	float lat;
@@ -77,6 +78,7 @@ void gpsbeidou(void)
 			printk("%s\n",tempstr);
 		}
 	}
+	#endif
 }
 
 K_THREAD_DEFINE(gpsbeidou_id, STACKSIZE, gpsbeidou, NULL, NULL, NULL,
