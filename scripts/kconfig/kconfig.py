@@ -14,9 +14,6 @@ WARNING_WHITELIST = (
     # selected. These should be investigated, but whitelist them for now.
     "y-selected",
 
-    # This symbol is only defined for ARC, but is set in some "shared" .conf
-    # files
-    "undefined symbol ARC_INIT",  # Issue #7977
 )
 
 def fatal(warning):
@@ -61,6 +58,13 @@ def main():
         kconf.load_config(config, replace=False)
 
 
+    # Write the merged configuration and the C header. This will evaluate all
+    # symbols, which might generate additional warnings, so do it before
+    # checking for warnings.
+    kconf.write_config(args.dotconfig)
+    kconf.write_autoconf(args.autoconf)
+
+
     # Print warnings for symbols whose actual value doesn't match the assigned
     # value
     for sym in kconf.defined_syms:
@@ -94,13 +98,6 @@ def main():
                      "to an actual problem, you can add it to the "
                      "whitelist at the top of {}."
                      .format(warning, sys.argv[0]))
-
-
-    # Write the merged configuration
-    kconf.write_config(args.dotconfig)
-
-    # Write the C header
-    kconf.write_autoconf(args.autoconf)
 
 
 # Message printed when a promptless symbol is assigned (and doesn't get the
