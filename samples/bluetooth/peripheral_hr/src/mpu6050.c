@@ -22,6 +22,7 @@ unsigned long Step_Count(float axis0, float axis1, float axis2);
 
 void mpu6050(void)
 {
+	#if 0
 	struct sensor_value intensity[3];
 	struct device *dev;
 
@@ -45,6 +46,7 @@ void mpu6050(void)
 		stepcounts = Step_Count(intensity[0].val1,intensity[1].val1,intensity[2].val1);
 		k_sleep(20);
 	}
+	#endif
 }
 
 

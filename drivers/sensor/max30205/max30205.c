@@ -38,7 +38,6 @@ static int max30205_sample_fetch(struct device *dev, enum sensor_channel chan)
 	u8_t buf[2];
 
 	__ASSERT_NO_MSG(chan == SENSOR_CHAN_ALL);
-	printk("%s\n",__func__);
 	buf[0] = 0;
 	if(i2c_write(drv_data->i2c, buf, 1, MAX30205_I2C_ADDR) < 0)
 	{
@@ -47,7 +46,7 @@ static int max30205_sample_fetch(struct device *dev, enum sensor_channel chan)
 	if(i2c_read(drv_data->i2c, buf,
 			   2, MAX30205_I2C_ADDR) < 0) {
 		printk("Failed to fetch data sample.");
-		return -EIO;
+		//return -EIO;
 	}
 	/*if (i2c_reg_read16(drv_data->i2c, MAX30205_I2C_ADDR,
 			   MAX30205_REG_TEMP,
@@ -61,7 +60,7 @@ static int max30205_sample_fetch(struct device *dev, enum sensor_channel chan)
 	if(i2c_read(drv_data->i2c, buf,
 			   2, 0x4d) < 0) {
 		printk("Failed to fetch data sample.");
-		return -EIO;
+		//return -EIO;
 	}
 	/*if (i2c_reg_read16(drv_data->i2c, MCP3221_I2C_ADDR,
 			   MCP3221_REG_TEMP,

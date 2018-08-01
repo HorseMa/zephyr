@@ -20,15 +20,16 @@
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
 
-#include <gatt/hrs.h>
-#include <gatt/dis.h>
-#include <gatt/bas.h>
+#include "hrs.h"
+#include "dis.h"
+#include "bas.h"
+#include "htp.h"
 
 struct bt_conn *default_conn;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-	BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0x0d, 0x18, 0x0f, 0x18, 0x05, 0x18),
+	BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0x0d, 0x18, 0x0f, 0x18, 0x05, 0x18, 0x09, 0x18),
 };
 
 static void connected(struct bt_conn *conn, u8_t err)
@@ -66,6 +67,7 @@ static void bt_ready(int err)
 	printk("Bluetooth initialized\n");
 
 	hrs_init(0x01);
+	htp_init(0x01);
 	bas_init();
 	dis_init(CONFIG_SOC, "Manufacturer");
 
@@ -120,7 +122,7 @@ void main(void)
 
 		/* Heartrate measurements simulation */
 		hrs_notify();
-
+		htp_notify();
 		/* Battery level simulation */
 		bas_notify();
 	}
