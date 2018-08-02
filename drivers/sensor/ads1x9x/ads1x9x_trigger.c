@@ -968,12 +968,12 @@ void ADS1x9x_Filtered_ECG(void)
 
 			   Resp_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
 			   ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
-			   /*if(loop % 10 == 0)
+			   if(loop % 10 == 0)
 			   {
 			   		//printk("%d,%d,%d\n",loop/5,ECGRawData[0],ECGRawData[1]);
 			   		printk("%d,%d,%d\n",loop/10,ECGFilteredData[0],ECGFilteredData[1]);
 			   	}
-			   	loop ++;*/
+			   	loop ++;
 			   //printk("%d,%d\n",ECGRawData[0]/0xff,ECGRawData[1]/0xff);
 			   //printk("%d,%d,%d\n",loop++,ECGFilteredData[0],ECGFilteredData[1]);
 			   RESP_Algorithm_Interface(ECGFilteredData[0]);

@@ -429,6 +429,7 @@ int ads1x9x_init(struct device *dev)
 {
 	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
 
+	k_busy_wait(500000);
 	printk("ads1x9x init!!!!!\r\n");
 	const struct ads1x9x_device_config *cfg = dev->config->config_info;
 
@@ -518,6 +519,9 @@ int ads1x9x_init(struct device *dev)
 
   ads1x9x_disable_start(dev);
   ads1x9x_read_all_reg(dev,ads1x9xregval);
+  for(u8_t i = 0;i < 12;i++)
+		printk("%02X ",ads1x9xregval[i]);
+  printk("\r\n");
   ads1x9x_write_cmd (dev, START_);
   ads1x9x_write_cmd (dev, STOP);
   delay(50);
@@ -550,6 +554,9 @@ int ads1x9x_init(struct device *dev)
   delay(10);
   ads1x9x_write_reg(dev,11, 0x0c);
   ads1x9x_read_all_reg(dev,ads1x9xregval);
+  for(u8_t i = 0;i < 12;i++)
+		printk("%02X ",ads1x9xregval[i]);
+  printk("\r\n");
   ads1x9x_set_out_bytes();
   ads1x9x_write_cmd (dev, RDATAC);
   delay(10);

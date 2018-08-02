@@ -25,14 +25,19 @@
 #ifndef LED1_GPIO_CONTROLLER
 #define LED1_GPIO_CONTROLLER 	LED1_GPIO_PORT
 #endif
+#ifndef LED2_GPIO_CONTROLLER
+#define LED2_GPIO_CONTROLLER 	LED2_GPIO_PORT
+#endif
 
 #define PORT0	 LED0_GPIO_CONTROLLER
 #define PORT1	 LED1_GPIO_CONTROLLER
+#define PORT2	 LED2_GPIO_CONTROLLER
 
 
 /* Change this if you have an LED connected to a custom pin */
 #define LED0    LED0_GPIO_PIN
 #define LED1    LED1_GPIO_PIN
+#define LED2    LED2_GPIO_PIN
 
 struct printk_data_t {
 	void *fifo_reserved; /* 1st word reserved for use by fifo */
@@ -70,7 +75,14 @@ void blink2(void)
 	blink(PORT1, 1000, LED1, 1);
 }
 
+void blink3(void)
+{
+	blink(PORT2, 500, LED2, 2);
+}
+
 K_THREAD_DEFINE(blink1_id, STACKSIZE, blink1, NULL, NULL, NULL,
 		PRIORITY, 0, K_NO_WAIT);
 K_THREAD_DEFINE(blink2_id, STACKSIZE, blink2, NULL, NULL, NULL,
+		PRIORITY, 0, K_NO_WAIT);
+K_THREAD_DEFINE(blink3_id, STACKSIZE, blink3, NULL, NULL, NULL,
 		PRIORITY, 0, K_NO_WAIT);
