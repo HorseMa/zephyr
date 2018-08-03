@@ -1,13 +1,31 @@
-#include <zephyr.h>
-#include <device.h>
-#include <gpio.h>
-#include <misc/printk.h>
-#include <misc/__assert.h>
-#include <board.h>
+/** @file
+ *  @brief STEP Service sample
+ */
+
+/*
+ * Copyright (c) 2016 Intel Corporation
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <zephyr/types.h>
+#include <stddef.h>
 #include <string.h>
+#include <errno.h>
+#include <misc/printk.h>
+#include <misc/byteorder.h>
+#include <zephyr.h>
+
 #include <sensor.h>
 #include <device.h>
-#include "mymath.h"
+#include <bluetooth/bluetooth.h>
+#include <bluetooth/hci.h>
+#include <bluetooth/conn.h>
+#include <bluetooth/uuid.h>
+#include <bluetooth/gatt.h>
+#include "step.h"
+#include <sensor.h>
+#include <device.h>
 #include <math.h>
 
 #ifndef TRUE
@@ -16,41 +34,84 @@
 #ifndef FALSE
 #define FALSE    0
 #endif
+#define BT_UUID_STEP                       BT_UUID_DECLARE_128(0x00, 0x00, 0x8B, 0x98, 0x42, 0xC2, 0x34, 0xA0,0x5C, 0x46, 0x84, 0x38, 0x87, 0x19, 0x86, 0x75)
+#define BT_UUID_STEP_MEASUREMENT           BT_UUID_DECLARE_128(0x00, 0x00, 0x8B, 0x98, 0x42, 0xC2, 0x34, 0xA0,0x5C, 0x46, 0x84, 0x38, 0x25, 0x01, 0x86, 0x75)
 
-u32_t stepcounts = 0;
+static struct bt_gatt_ccc_cfg hrmc_ccc_cfg[BT_GATT_CCC_MAX] = {};
+static u8_t simulate_hrm;
+static u8_t step_blsc;
+
+static void hrmc_ccc_cfg_changed(const struct bt_gatt_attr *attr,
+				 u16_t value)
+{
+	simulate_hrm = (value == BT_GATT_CCC_NOTIFY) ? 1 : 0;
+}
+
+/* Heart Rate Service Declaration */
+static struct bt_gatt_attr attrs[] = {
+	BT_GATT_PRIMARY_SERVICE(BT_UUID_STEP),
+	BT_GATT_CHARACTERISTIC(BT_UUID_STEP_MEASUREMENT, BT_GATT_CHRC_NOTIFY,
+			       BT_GATT_PERM_NONE, NULL, NULL, NULL),
+	BT_GATT_CCC(hrmc_ccc_cfg, hrmc_ccc_cfg_changed),
+};
+
+static struct bt_gatt_service step_svc = BT_GATT_SERVICE(attrs);
+
+u32_t stepcounts = 0,stepcounts_old = 0;
 unsigned long Step_Count(float axis0, float axis1, float axis2);
 
-void mpu6050(void)
+static struct device *mpu6050dev;
+void step_init(u8_t blsc)
 {
-	#if 0
-	struct sensor_value intensity[3];
-	struct device *dev;
+	step_blsc = blsc;
+	int ret;
 
 	printk("MPU6050 sample application\n");
-	dev = device_get_binding("MPU6050");
+	mpu6050dev = device_get_binding("MPU6050");
 
-	if (!dev) {
+	if (!mpu6050dev) {
 		printk("sensor: device not found.\n");
 		return;
 	}
 	stepcounts = 0;
-	while (1) {
-		if (sensor_sample_fetch(dev)) {
-			printk("sensor_sample fetch failed\n");
-		}
 
-		sensor_channel_get(dev, SENSOR_CHAN_ACCEL_XYZ, intensity);
-
-		/*printk("ambient light intensity without"
-				" trigger is %d, %d, %d\n", intensity[0].val1, intensity[1].val1, intensity[2].val1);*/
-		stepcounts = Step_Count(intensity[0].val1,intensity[1].val1,intensity[2].val1);
-		k_sleep(20);
+	ret = bt_gatt_service_register(&step_svc);
+	if(ret < 0)
+	{
+		printk("register step Service err!\n");
 	}
-	#endif
 }
 
+void step_notify(void)
+{
+	static u8_t hrm[1];
+	struct sensor_value intensity[3];
 
+	/* Heartrate measurements simulation */
+	if (!simulate_hrm) {
+		return;
+	}
 
+	if (sensor_sample_fetch(mpu6050dev)) {
+			printk("sensor_sample fetch failed\n");
+	}
+
+	sensor_channel_get(mpu6050dev, SENSOR_CHAN_ACCEL_XYZ, intensity);
+
+	/*printk("ambient light intensity without"
+			" trigger is %d, %d, %d\n", intensity[0].val1, intensity[1].val1, intensity[2].val1);*/
+	stepcounts = Step_Count(intensity[0].val1,intensity[1].val1,intensity[2].val1);
+	if(stepcounts == stepcounts_old)
+	{
+		return;
+	}
+	else
+	{
+		hrm[0] = stepcounts;
+		stepcounts_old = stepcounts;
+		bt_gatt_notify(NULL, &attrs[1], &hrm, sizeof(hrm));
+	}
+}
 
 #define P_P_DIFF	3 /* 波峰-波谷的差值，即3D阈值 */
 #define RISING_EDGE  1 /* 上升沿状态 */
@@ -120,9 +181,9 @@ unsigned long Step_Count(float axis0, float axis1, float axis2){
 				return stepCount;
 			}
 			stepOK++;
-			if(stepOK>=STEP_OK){ /* 走7步之后更新状态 */
+			//if(stepOK>=STEP_OK){ /* 走7步之后更新状态 */
 				walkOkSta = TRUE;
-			}
+			//}
 			lastTime = k_uptime_get(); /* 更新时间 */
 		}
 	}
