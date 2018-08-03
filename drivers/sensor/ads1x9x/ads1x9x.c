@@ -19,6 +19,34 @@
 struct ads1x9x_device_data ads1x9x_data;
 u8_t ads1x9xregval[12] = {0};
 static u8_t SPI_Rx_exp_Count = 0;
+static uint8_t ADS1292R_Register_Settings_EstackTEST[15] = {
+
+
+	 0x00,   //Device ID read Ony
+
+	 0x00,  //CONFIG1:0x00   125 SPS   （0x02: 500 SPS）
+
+     0xE0,  //CONFIG2:0xE0   lead off比较器使能，Vref缓冲器使能
+
+     0x58,  //LOFF:0x58     电极脱落比较器门限电压90%/10%，脱落电流6uA直流模式
+
+     0x40,  //CH1SET        呼吸通道PGAgain = 4
+
+     0x00,  //CH2SET        心电通道PGAgain = 6
+
+	 0x2C,  //RLD_SENS:0x2C   RLD缓冲放大器使能，关闭RLD内部电流源，CH2作为RLD输入
+
+	 0x2C,  //LOFF_SENS:0x2C   PGA差分输入电流源 CH2开启，CH1关闭。CH2作为lead off输入
+
+     0x00,  //LOFF_STAT:0x00   只有bit6可写，为CLK_DIV.  电极脱落状态读： bit4[RLD电极]  bit3[ECG-R电极]  bit2[ECG-L电极]   0:ok 1:掉了
+
+     0xEA,  //RESP1: 0xEA        CH1作为呼吸调制/解调通道，相位112.5度，使用内部时钟
+
+	 0x83,  //RESP2: 0x83       bit7-偏移校正，改变PGAgain等参数后需置位。RESP调制频率32Khz，RLD基准电压源为内部1/2Vcc.
+
+     0x00   //GPIO:           不用。
+};
+
 static uint8_t ADS1x9xR_Default_Register_Settings[15] = {
 
 	//Device ID read Ony
@@ -369,7 +397,7 @@ int ads1x9x_write_all_default_regs(struct device *dev)
 	{
 		for ( Reg_Init_i = 1; Reg_Init_i < 12; Reg_Init_i++)
 		{
-			ads1x9x_write_reg(dev,Reg_Init_i,ADS1x9xR_Default_Register_Settings[Reg_Init_i]);
+			ads1x9x_write_reg(dev,Reg_Init_i,ADS1292R_Register_Settings_EstackTEST[Reg_Init_i]);
 			printk("ads1x9xR default regs value\r\n");
 		}
 	}
@@ -414,15 +442,33 @@ int ads1x9x_write_cmd(struct device *dev, u8_t cmd)
 	return res;
 }
 
+extern short ECGRawData[4],ECGFilteredData[4] ;
+extern unsigned short Respiration_Rate,QRS_Heart_Rate;
+static int ads1x9x_channel_get(struct device *dev, enum sensor_channel chan,
+			      struct sensor_value *val)
+{
+	//struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+
+	switch (chan) {
+	case SENSOR_CHAN_ACCEL_X:
+		val->val1 = ECGFilteredData[0];
+		val->val2 = ECGFilteredData[1];
+		break;
+	case SENSOR_CHAN_ACCEL_Y:
+		val->val1 = QRS_Heart_Rate;
+		break;
+	case SENSOR_CHAN_ACCEL_Z:
+		val->val1 = Respiration_Rate;
+		break;
+	default:
+		return -ENOTSUP;
+	}
+	return 0;
+}
+
 static const struct sensor_driver_api ads1x9x_api = {
-	#if 0
-	.attr_set = ads1x9x_attr_set,
-#ifdef CONFIG_ADS1X9X_TRIGGER
 	.trigger_set = ads1x9x_trigger_set,
-#endif
-	.sample_fetch = ads1x9x_sample_fetch,
 	.channel_get = ads1x9x_channel_get,
-	#endif
 };
 
 int ads1x9x_init(struct device *dev)
@@ -527,6 +573,8 @@ int ads1x9x_init(struct device *dev)
   delay(50);
   ads1x9x_write_cmd (dev, SDATAC);					// SDATAC command
   delay(300);
+  ads1x9x_write_all_default_regs(dev);
+  /*
   ads1x9x_write_reg(dev,1, 0x02); 		//Set sampling rate to 500 SPS
   //ads1x9x_write_reg(dev,1, 0x00); 		//Set sampling rate to 125 SPS
   delay(10);
@@ -553,6 +601,7 @@ int ads1x9x_init(struct device *dev)
   //ads1x9x_write_reg(dev,10, 0b00000011);		//Respiration: Calib OFF, respiration freq defaults
   delay(10);
   ads1x9x_write_reg(dev,11, 0x0c);
+  */
   ads1x9x_read_all_reg(dev,ads1x9xregval);
   for(u8_t i = 0;i < 12;i++)
 		printk("%02X ",ads1x9xregval[i]);

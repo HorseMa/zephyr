@@ -121,7 +121,7 @@ void main(void)
 		k_sleep(MSEC_PER_SEC);
 
 		/* Heartrate measurements simulation */
-		hrs_notify();
+		//hrs_notify();
 		htp_notify();
 		/* Battery level simulation */
 		bas_notify();

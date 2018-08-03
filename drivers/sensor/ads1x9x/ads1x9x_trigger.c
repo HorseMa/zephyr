@@ -17,7 +17,7 @@
 #include "ADS1x9x_ECG_Processing.h"
 #include "ADS1x9x_RESP_Processing.h"
 
-unsigned short Respiration_Rate = 0 ;
+unsigned short Respiration_Rate = 0 ,Respiration_Rate_old = 0 ;
 //unsigned char RR_flag;
 
 /* Variables to hold the sample data for calculating the 1st and 2nd */
@@ -33,7 +33,7 @@ short RESP_WorkingBuff[2 * FILTERORDER];
 static unsigned char LeadStatus;
 #if (FILTERORDER == 161)
 
-short RespCoeffBuf[FILTERORDER] = {
+const short RespCoeffBuf[FILTERORDER] = {
 
 /* Coeff for lowpass Fc=2Hz @ 500 SPS*/
 
@@ -149,11 +149,11 @@ void ADC_DLLB(short in, u8_t index,short *out)    //队列滚动滤波, DL_long:
 	}
 	*out = temp / len;
 }
-static  uint8_t SPI_Rx_Data_Flag = 0,  SPI_Rx_buf[12];
+static  uint8_t SPI_Rx_buf[12];
 extern u8_t ads1x9xregval[];
 static long ADS1x9x_ECG_Data_buf[6];
-static  short ECGRawData[4],ECGFilteredData[4] ;
-static  unsigned short QRS_Heart_Rate;
+short ECGRawData[4],ECGFilteredData[4] ;
+unsigned short QRS_Heart_Rate = 0,QRS_Heart_Rate_old = 0;
 static unsigned char Filter_Option = 0;
 static short ECG_WorkingBuff[2 * FILTERORDER];
 static short ECG_ch0_WorkingBuff[2 * FILTERORDER];
@@ -178,7 +178,7 @@ unsigned char first_peak_detect = FALSE ;
 unsigned int sample_count = 0 ;
 unsigned int sample_index[MAX_PEAK_TO_SEARCH+2] ;
 
-void Resp_FilterProcess(short * RESP_WorkingBuff, short * CoeffBuf, short* FilterOut)
+void Resp_FilterProcess(short * RESP_WorkingBuff, const short * CoeffBuf, short* FilterOut)
 {
   int32_t acc = 0;   // accumulator for MACs
   int  k;
@@ -277,7 +277,7 @@ void Resp_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 	/* Store the DC removed value in RESP_WorkingBuff buffer in millivolts range*/
 	RESP_WorkingBuff[bufCur] = RESPData;
 	//ADC_DLLB(RESPData,1,(short*)&FiltOut);
-	ECG_FilterProcess(&RESP_WorkingBuff[bufCur],RespCoeffBuf,(short*)&FiltOut);
+	ECG_FilterProcess(&RESP_WorkingBuff[bufCur],(const short*)RespCoeffBuf,(short*)&FiltOut);
 	/* Store the DC removed value in Working buffer in millivolts range*/
 	RESP_WorkingBuff[bufStart] = RESPData;
 
@@ -424,7 +424,7 @@ void RESP_Algorithm_Interface(short CurrSample)
 //	static FILE *fp = fopen("RESPData.txt", "w");
 	static short prev_data[64] ={0};
 	static unsigned char Decimeter = 0;
-	char i;
+	int i;
 	long Mac=0;
 	prev_data[0] = CurrSample;
 	for ( i=63; i > 0; i--)
@@ -452,7 +452,7 @@ void RESP_Algorithm_Interface(short CurrSample)
 	}
 }
 
-void ECG_FilterProcess(short * WorkingBuff, short * CoeffBuf, short* FilterOut)
+void ECG_FilterProcess(short * WorkingBuff, const short * CoeffBuf, short* FilterOut)
 {
   int32_t acc = 0;   // accumulator for MACs
   int  k;
@@ -527,7 +527,7 @@ void ECG_ProcessCurrSample(short *CurrAqsSample, short *FilteredOut)
 	static unsigned short ECG_bufStart=0, ECG_bufCur = FILTERORDER-1, ECGFirstFlag = 1;
  	static short ECG_Pvev_DC_Sample, ECG_Pvev_Sample;/* Working Buffer Used for Filtering*/
 //	static short ECG_WorkingBuff[2 * FILTERORDER];
- 	short *CoeffBuf;
+ 	const short *CoeffBuf;
 
  	short temp1, temp2, ECGData;
 
@@ -590,7 +590,7 @@ void ECG_ProcessCurrSample_ch0(short *CurrAqsSample, short *FilteredOut)
  	static unsigned short ECG_ch0_bufStart=0, ECG_ch0_bufCur = FILTERORDER-1, ECG_ch0FirstFlag = 1;
  	static short ECG_ch0_Pvev_DC_Sample, ECG_ch0_Pvev_Sample;
  	//static short ECG_ch0_WorkingBuff[2 * FILTERORDER];
- 	short *CoeffBuf;
+ 	const short *CoeffBuf;
 
  	short temp1_ch0, temp2_ch0, ECGData_ch0;
 
@@ -906,7 +906,7 @@ void ADS1x9x_Filtered_ECG(void)
 {
 	//ADS1x9x_ECG_Data_buf[1] = 0-ADS1x9x_ECG_Data_buf[1];
 	//printk("%s\r\n",__func__);
-	static int loop = 0;
+	//static int loop = 0;
 	switch( ads1x9xregval[0] & 0x03)
 	{
 
@@ -968,12 +968,12 @@ void ADS1x9x_Filtered_ECG(void)
 
 			   Resp_ProcessCurrSample(&ECGRawData[0],&ECGFilteredData[0]);
 			   ECG_ProcessCurrSample(&ECGRawData[1],&ECGFilteredData[1]);
-			   if(loop % 10 == 0)
+			   /*if(loop % 10 == 0)
 			   {
 			   		//printk("%d,%d,%d\n",loop/5,ECGRawData[0],ECGRawData[1]);
 			   		printk("%d,%d,%d\n",loop/10,ECGFilteredData[0],ECGFilteredData[1]);
 			   	}
-			   	loop ++;
+			   	loop ++;*/
 			   //printk("%d,%d\n",ECGRawData[0]/0xff,ECGRawData[1]/0xff);
 			   //printk("%d,%d,%d\n",loop++,ECGFilteredData[0],ECGFilteredData[1]);
 			   RESP_Algorithm_Interface(ECGFilteredData[0]);
@@ -1098,22 +1098,94 @@ void ADS1x9x_Parse_data_packet(void)
 	ADS1x9x_Filtered_ECG();
 }
 
+static int ads1x9x_handle_raw_dataready_int(struct device *dev)
+{
+	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	struct sensor_trigger drdy_trig = {
+		.type = SENSOR_TRIG_DATA_READY,
+		.chan = SENSOR_CHAN_ACCEL_X,
+	};
+
+	if (ads1x9x->drdy_handler) {
+		ads1x9x->drdy_handler(dev, &drdy_trig);
+	}
+
+	return 0;
+}
+
+static int ads1x9x_handle_heart_rate_dataready_int(struct device *dev)
+{
+	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	struct sensor_trigger drdy_trig = {
+		.type = SENSOR_TRIG_DATA_READY,
+		.chan = SENSOR_CHAN_ACCEL_Y,
+	};
+
+	if (ads1x9x->drdy_handler) {
+		ads1x9x->drdy_handler(dev, &drdy_trig);
+	}
+
+	return 0;
+}
+
+static int ads1x9x_handle_resp_rate_dataready_int(struct device *dev)
+{
+	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	struct sensor_trigger drdy_trig = {
+		.type = SENSOR_TRIG_DATA_READY,
+		.chan = SENSOR_CHAN_ACCEL_Z,
+	};
+
+	if (ads1x9x->drdy_handler) {
+		ads1x9x->drdy_handler(dev, &drdy_trig);
+	}
+
+	return 0;
+}
+
 static void ads1x9x_handle_interrupts(void *arg)
 {
 	struct device *dev = (struct device *)arg;
-	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
-	static int level = 0;
+	long status_byte=0;
+	bool leadoff_deteted = true;
+
+	//struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+	//static int level = 0;
 	//level = level ^ 1;
 	//printk("ads1x9x data ready!!!\r\n");
 	//gpio_pin_write(ads1x9x->gpio, 20,level);
 	ads1x9x_read_data(dev,SPI_Rx_buf);
+	status_byte = (long)((long)SPI_Rx_buf[2] | ((long) SPI_Rx_buf[1]) <<8 | ((long) SPI_Rx_buf[0])<<16); // First 3 bytes represents the status
+    status_byte  = (status_byte & 0x0f8000) >> 15;  // bit15 gives the lead status
+    LeadStatus = (unsigned char ) status_byte ;
+    if(!((LeadStatus & 0x1f) == 0 ))
+    {
+    	leadoff_deteted  = true;
+      	printk("lead off !!!!\n");
+      	return;
+    }
+    else
+    {
+      	leadoff_deteted  = false;
+    }
 	/*for(u8_t i = 0;i < 9;i++)
 	{
 		printk("%02X ",SPI_Rx_buf[i]);
 	}
 	//printk("\r\n");*/
 	ADS1x9x_Parse_data_packet();
-	if((level ++) % 2)
+	ads1x9x_handle_raw_dataready_int(dev);
+	if(QRS_Heart_Rate != QRS_Heart_Rate_old)
+	{
+		ads1x9x_handle_heart_rate_dataready_int(dev);
+		QRS_Heart_Rate_old = QRS_Heart_Rate;
+	}
+	if(Respiration_Rate != Respiration_Rate_old)
+	{
+		ads1x9x_handle_resp_rate_dataready_int(dev);
+		Respiration_Rate_old = Respiration_Rate;
+	}
+	/*if((level ++) % 2)
 	{
 		//ads1x9x_write_reg(dev,11,0x03);
 		//gpio_pin_write(ads1x9x->gpio, 20,1);
@@ -1122,7 +1194,7 @@ static void ads1x9x_handle_interrupts(void *arg)
 	{
 		//ads1x9x_write_reg(dev,11,0x00);
 		//gpio_pin_write(ads1x9x->gpio, 20,0);
-	}
+	}*/
 	//printk("QRS_Heart_Rate = %d\r\n",QRS_Heart_Rate);
 	//printk("Respiration_Rate = %d\r\n",Respiration_Rate);
 }
@@ -1179,7 +1251,22 @@ int ads1x9x_trigger_set(struct device *dev,
 		       const struct sensor_trigger *trig,
 		       sensor_trigger_handler_t handler)
 {
-	return -ENOTSUP;
+	struct ads1x9x_device_data *ads1x9x = dev->driver_data;
+
+	const struct ads1x9x_device_config *cfg = dev->config->config_info;
+
+	if (trig->type != SENSOR_TRIG_DATA_READY) {
+		return -ENOTSUP;
+	}
+
+	ads1x9x->drdy_handler = handler;
+	if (handler == NULL) {
+		return 0;
+	}
+	gpio_pin_enable_callback(ads1x9x->gpio, cfg->int_pin);
+	//ads1x9x->data_ready_trigger = *trig;
+
+	return 0;
 }
 
 int ads1x9x_trigger_mode_init(struct device *dev)
@@ -1209,7 +1296,7 @@ int ads1x9x_trigger_mode_init(struct device *dev)
 			   BIT(cfg->int_pin));
 
 	gpio_add_callback(ads1x9x->gpio, &ads1x9x->gpio_cb);
-	gpio_pin_enable_callback(ads1x9x->gpio, cfg->int_pin);
+	//gpio_pin_enable_callback(ads1x9x->gpio, cfg->int_pin);
 
 	return 0;
 }

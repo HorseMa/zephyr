@@ -16,11 +16,14 @@
 #include <misc/byteorder.h>
 #include <zephyr.h>
 
+#include <sensor.h>
+#include <device.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/conn.h>
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
+#include "hrs.h"
 
 static struct bt_gatt_ccc_cfg hrmc_ccc_cfg[BT_GATT_CCC_MAX] = {};
 static u8_t simulate_hrm;
@@ -55,10 +58,74 @@ static struct bt_gatt_attr attrs[] = {
 
 static struct bt_gatt_service hrs_svc = BT_GATT_SERVICE(attrs);
 
+static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigger)
+{
+	struct sensor_value val[3];
+	static int loop = 0;
+
+	if (trigger->type != SENSOR_TRIG_DATA_READY &&
+	    trigger->type != SENSOR_TRIG_DELTA) {
+		printk("Ecg: trigger handler: unknown trigger type.\n");
+		return;
+	}
+
+	/*if (sensor_sample_fetch(ads1x9x) < 0) {
+		printk("Gyro sample update error.\n");
+	}*/
+	if(trigger->chan == SENSOR_CHAN_ACCEL_X)
+	{
+		if (sensor_channel_get(ads1x9x, SENSOR_CHAN_ACCEL_X, val) < 0) {
+			printk("Cannot read ads1x9x raw channels.\n");
+			return;
+		}
+		//printk("raw\n");
+		printk("%d,%d,%d\n",loop ++,val[0].val1,val[0].val2);
+	}
+	else if(trigger->chan == SENSOR_CHAN_ACCEL_Y)
+	{
+		if (sensor_channel_get(ads1x9x, SENSOR_CHAN_ACCEL_Y, val) < 0) {
+			printk("Cannot read ads1x9x heart channels.\n");
+			return;
+		}
+		printk("heart\n");
+		heartrate = (u8_t)val[0].val1;
+		hrs_notify();
+	}
+	else if(trigger->chan == SENSOR_CHAN_ACCEL_Z)
+	{
+		if (sensor_channel_get(ads1x9x, SENSOR_CHAN_ACCEL_Z, val) < 0) {
+			printk("Cannot read ads1x9x resp channels.\n");
+			return;
+		}
+		printk("resp\n");
+	}
+	else
+	{
+
+	}
+
+}
+
 void hrs_init(u8_t blsc)
 {
 	hrs_blsc = blsc;
+	struct device *dev;
+	struct sensor_trigger trig;
 
+	printk("ADS1X9X sample application\n");
+	dev = device_get_binding("ADS1X9X");
+
+	if (!dev) {
+		printk("sensor: device not found.\n");
+		return;
+	}
+
+	trig.type = SENSOR_TRIG_DATA_READY;
+	trig.chan = SENSOR_CHAN_ACCEL_X;
+	if (sensor_trigger_set(dev, &trig, trigger_handler) < 0) {
+		printk("Gyro: cannot set trigger.\n");
+		return;
+	}
 	bt_gatt_service_register(&hrs_svc);
 }
 
@@ -71,13 +138,13 @@ void hrs_notify(void)
 		return;
 	}
 
-	heartrate++;
+	//heartrate++;
 	if (heartrate == 160) {
 		heartrate = 90;
 	}
 
 	hrm[0] = 0x06; /* uint8, sensor contact */
-	hrm[1] = stepCount;
+	hrm[1] = heartrate;
 
 	bt_gatt_notify(NULL, &attrs[1], &hrm, sizeof(hrm));
 }

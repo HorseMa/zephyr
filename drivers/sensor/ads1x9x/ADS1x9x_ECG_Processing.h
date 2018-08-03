@@ -139,7 +139,7 @@ void QRS_Algorithm_Interface(short CurrSample);
 //! \return  None
 //
 //*****************************************************************************
-void ECG_FilterProcess(short * WorkingBuff, short * CoeffBuf, short* FilterOut);
+void ECG_FilterProcess(short * WorkingBuff, const short * CoeffBuf, short* FilterOut);
 
 //*****************************************************************************
 //

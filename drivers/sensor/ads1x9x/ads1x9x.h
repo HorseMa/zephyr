@@ -712,7 +712,7 @@ struct ads1x9x_device_data {
 	struct k_work work;
 	struct device *dev;
 #endif
-
+	sensor_trigger_handler_t drdy_handler;
 #ifdef CONFIG_ADS1X9X_TRIGGER
 #if !defined(CONFIG_ADS1X9X_ACCEL_PMU_SUSPEND)
 	sensor_trigger_handler_t handler_drdy_acc;
