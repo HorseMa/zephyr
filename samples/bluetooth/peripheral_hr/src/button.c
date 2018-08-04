@@ -31,6 +31,67 @@ static void _system_off(void)
 	nrf_power_system_off();
 }
 
+void power_off(struct device *gpiob)
+{
+	gpio_pin_configure(gpiob, 10,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 10, 1); // buzzer
+	k_busy_wait(500000);
+	gpio_pin_configure(gpiob, 10,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 10, 0); // buzzer
+	gpio_pin_configure(gpiob, 9,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 9, 0); // LDO
+	gpio_pin_configure(gpiob, 8,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 8, 0); // LDO
+	gpio_pin_configure(gpiob, 22,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 22, 0); // LED0
+	gpio_pin_configure(gpiob, 23,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 23, 0); // LED1
+	gpio_pin_configure(gpiob, 24,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 24, 0); // LED2
+	gpio_pin_configure(gpiob, 14,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 14, 0); // ads start pin
+	gpio_pin_configure(gpiob, 15,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 15, 0); // ads reset pin
+	gpio_pin_configure(gpiob, 20,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 20, 0); // ads ready pin
+	gpio_pin_configure(gpiob, 16,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, 16, 0); // ads cs pin
+	gpio_pin_configure(gpiob, 17,
+			GPIO_DIR_OUT); // ads mosi
+	gpio_pin_write(gpiob, 17,0);
+	gpio_pin_configure(gpiob, 19,
+			GPIO_DIR_OUT); // ads miso
+	gpio_pin_write(gpiob, 19,0);
+	gpio_pin_configure(gpiob, 18,
+			GPIO_DIR_OUT); // ads sclk
+	gpio_pin_write(gpiob, 18,0);
+	gpio_pin_configure(gpiob, 12,
+			GPIO_DIR_IN); // i2c sda
+	//gpio_pin_write(gpiob, 30,1);
+	gpio_pin_configure(gpiob, 13,
+			GPIO_DIR_IN); // i2c sda
+	//gpio_pin_write(gpiob, 7,1);
+	gpio_pin_configure(gpiob, KEYAPIN, GPIO_DIR_IN
+			| GPIO_PUD_PULL_UP
+			| GPIO_CFG_SENSE_LOW);
+	nrf_gpiote_clear_port_event();
+	/* Enable GPIOTE Port Event */
+	nrf_gpiote_interrupt_enable(GPIOTE_INTENSET_PORT_Msk);
+	NVIC_EnableIRQ(GPIOTE_IRQn);
+	_system_off();
+}
+
 void button_pressed(struct device *gpiob, struct gpio_callback *cb,
 		    u32_t pins)
 {
@@ -38,60 +99,8 @@ void button_pressed(struct device *gpiob, struct gpio_callback *cb,
 	if(pins & BIT(KEYAPIN))
 	{
 		k_busy_wait(300000);
-		gpio_pin_configure(gpiob, 10,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 10, 0); // buzzer
-		gpio_pin_configure(gpiob, 9,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 9, 0); // LDO
-		gpio_pin_configure(gpiob, 8,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 8, 0); // LDO
-		gpio_pin_configure(gpiob, 22,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 22, 0); // LED0
-		gpio_pin_configure(gpiob, 23,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 23, 0); // LED1
-		gpio_pin_configure(gpiob, 24,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 24, 0); // LED2
-		gpio_pin_configure(gpiob, 14,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 14, 0); // ads start pin
-		gpio_pin_configure(gpiob, 15,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 15, 0); // ads reset pin
-		gpio_pin_configure(gpiob, 20,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 20, 0); // ads ready pin
-		gpio_pin_configure(gpiob, 16,
-				   GPIO_DIR_OUT);
-		gpio_pin_write(gpiob, 16, 0); // ads cs pin
-		gpio_pin_configure(gpiob, 17,
-				   GPIO_DIR_OUT); // ads mosi
-		gpio_pin_write(gpiob, 17,0);
-		gpio_pin_configure(gpiob, 19,
-				   GPIO_DIR_OUT); // ads miso
-		gpio_pin_write(gpiob, 19,0);
-		gpio_pin_configure(gpiob, 18,
-				   GPIO_DIR_OUT); // ads sclk
-		gpio_pin_write(gpiob, 18,0);
-		gpio_pin_configure(gpiob, 12,
-				   GPIO_DIR_IN); // i2c sda
-		//gpio_pin_write(gpiob, 30,1);
-		gpio_pin_configure(gpiob, 13,
-				   GPIO_DIR_IN); // i2c sda
-		//gpio_pin_write(gpiob, 7,1);
-		gpio_pin_configure(gpiob, KEYAPIN, GPIO_DIR_IN
-				| GPIO_PUD_PULL_UP
-				| GPIO_CFG_SENSE_LOW);
-		nrf_gpiote_clear_port_event();
-		/* Enable GPIOTE Port Event */
-		nrf_gpiote_interrupt_enable(GPIOTE_INTENSET_PORT_Msk);
-		NVIC_EnableIRQ(GPIOTE_IRQn);
-		printk("Button pressed at pin : %08x, %d\n", pins, k_cycle_get_32());
-		_system_off();
+
+		power_off(gpiob);
 	}
 }
 

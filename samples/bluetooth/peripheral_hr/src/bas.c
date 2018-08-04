@@ -56,6 +56,8 @@
 #error "Unsupported board."
 #endif
 
+#define PORT      "GPIO_0"
+
 #define BUFFER_SIZE  6
 static s16_t m_sample_buffer[BUFFER_SIZE];
 
@@ -145,7 +147,9 @@ void bas_init(void)
 	bt_gatt_service_register(&bas_svc);
 }
 
-void bas_notify(void)
+extern void power_off(struct device *gpiob);
+
+void detectbattary(void)
 {
 	int ret;
 	const struct adc_sequence sequence = {
@@ -154,15 +158,12 @@ void bas_notify(void)
 		.buffer_size = sizeof(m_sample_buffer),
 		.resolution  = ADC_RESOLUTION,
 	};
-	static int loop = 0;
-	if(loop != 0)
-	{
-		loop ++;
-		if(loop == 100)
-		{
-			loop = 0;
-		}
-		return;
+	struct device *gpiob;
+
+	gpiob = device_get_binding(PORT);
+	if (!gpiob) {
+		printk("error\n");
+		//return;
 	}
 
 	ret = adc_read(adc_dev, &sequence);
@@ -181,6 +182,7 @@ void bas_notify(void)
 	{
 		battery = 0;
 		// system off (shutdown)
+		power_off(gpiob);
 	}
 	else
 	{
@@ -189,8 +191,33 @@ void bas_notify(void)
 		{
 			// 低电量报警
 			alarm_flag = true;
+			gpio_pin_configure(gpiob, 10,
+			GPIO_DIR_OUT);
+			gpio_pin_write(gpiob, 10, 1); // buzzer
+			k_busy_wait(200000);
+			gpio_pin_write(gpiob, 10, 0); // buzzer
+			k_busy_wait(200000);
+			gpio_pin_write(gpiob, 10, 1); // buzzer
+			k_busy_wait(2000000);
+			gpio_pin_write(gpiob, 10, 0); // buzzer
 		}
 	}
+}
+
+void bas_notify(void)
+{
+	static int loop = 0;
+
+	if(loop != 0)
+	{
+		loop ++;
+		if(loop == 100)
+		{
+			loop = 0;
+		}
+		return;
+	}
+
 	//printk("battery : %d%\n",battery);
 	bt_gatt_notify(NULL, &attrs[1], &battery, sizeof(battery));
 }

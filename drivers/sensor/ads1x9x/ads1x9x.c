@@ -583,7 +583,7 @@ int ads1x9x_init(struct device *dev)
   delay(10);
   ads1x9x_write_reg(dev,3, 0b00010000);		//Lead-off defaults
   delay(10);
-  ads1x9x_write_reg(dev,4, 0b01000000);	//Ch 1 enabled, gain 6, connected to electrode in
+  ads1x9x_write_reg(dev,4, 0b00000000);	//Ch 1 enabled, gain 6, connected to electrode in
   //ads1x9x_write_reg(dev,4, 0b01100000);	//Ch 1 enabled, gain 6, connected to electrode in
   delay(10);
   //ads1x9x_write_reg(dev,5, 0x00);	//Ch 2 enabled, gain 6, connected to electrode in

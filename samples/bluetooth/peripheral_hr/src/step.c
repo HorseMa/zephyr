@@ -113,7 +113,7 @@ void step_notify(void)
 	}
 }
 
-#define P_P_DIFF	3 /* 波峰-波谷的差值，即3D阈值 */
+#define P_P_DIFF	1 /* 波峰-波谷的差值，即3D阈值 */
 #define RISING_EDGE  1 /* 上升沿状态 */
 #define FALLING_EDGE 0 /* 下降沿状态 */
 #define FAST_WALK_TIME_LIMIT_MS	200 	/* ms */

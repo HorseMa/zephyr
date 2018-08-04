@@ -108,6 +108,8 @@ K_THREAD_STACK_DEFINE(stack, STACK_SIZE);
 static struct k_thread thread_data;
 void mpu6050(void);
 */
+extern void detectbattary(void);
+
 void main(void)
 {
 	int err;
@@ -134,6 +136,7 @@ void main(void)
 		//hrs_notify();
 		step_notify();
 		htp_notify();
+		detectbattary();
 		/* Battery level simulation */
 		bas_notify();
 	}

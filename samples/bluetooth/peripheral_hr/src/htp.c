@@ -144,7 +144,7 @@ static int hts_sim_measurement(ble_hts_meas_t * p_meas)
 		printk("Cannot read MAX30205 temperature channel\n");
 		return -1;
 	}
-    printk("%d,%d\n",loop ++,temp.val2);
+    //printk("%d,%d\n",loop ++,temp.val2);
     pidrawdata[pidrawdatacount ++] = temp.val2 / 0x0f;
     if(pidrawdatacount >= 20)
     {

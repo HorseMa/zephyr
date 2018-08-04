@@ -83,9 +83,9 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 			return;
 		}
 		//printk("raw\n");
-		if(!(loop % 5))
+		if(!(loop ++ % 5))
 		{
-			//printk("%d,%d,%d\n",loop / 5,val[0].val1,val[0].val2);
+			printk("%d,%d,%d\n",loop,val[0].val1,val[0].val2);
 			ecgrawdata[rawdatacount * 2] = val[0].val1 / 0xff;
 			ecgrawdata[rawdatacount * 2 + 1] = val[0].val2 / 0xff;
 			rawdatacount ++;
@@ -95,7 +95,7 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 				ecg_notify();
 			}
 		}
-		loop ++;
+		//loop ++;
 
 
 	}
