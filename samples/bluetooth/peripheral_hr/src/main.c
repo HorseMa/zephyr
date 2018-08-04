@@ -25,6 +25,10 @@
 #include "bas.h"
 #include "htp.h"
 #include "step.h"
+#include "ecg.h"
+#include "pid.h"
+#include "resp.h"
+#include "gps.h"
 
 struct bt_conn *default_conn;
 
@@ -68,6 +72,10 @@ static void bt_ready(int err)
 	printk("Bluetooth initialized\n");
 
 	hrs_init(0x01);
+	ecg_init(0x01);
+	resp_init(0x01);
+	gps_init(0x01);
+	pid_init(0x01);
 	step_init(0x01);
 	htp_init(0x01);
 	bas_init();

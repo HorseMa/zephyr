@@ -30,7 +30,7 @@ static uint8_t ADS1292R_Register_Settings_EstackTEST[15] = {
 
      0x58,  //LOFF:0x58     电极脱落比较器门限电压90%/10%，脱落电流6uA直流模式
 
-     0x40,  //CH1SET        呼吸通道PGAgain = 4
+     0x11,  //CH1SET        呼吸通道PGAgain = 4
 
      0x00,  //CH2SET        心电通道PGAgain = 6
 
@@ -47,7 +47,7 @@ static uint8_t ADS1292R_Register_Settings_EstackTEST[15] = {
      0x00   //GPIO:           不用。
 };
 
-static uint8_t ADS1x9xR_Default_Register_Settings[15] = {
+/*static uint8_t ADS1x9xR_Default_Register_Settings[15] = {
 
 	//Device ID read Ony
 	0x00,
@@ -73,7 +73,7 @@ static uint8_t ADS1x9xR_Default_Register_Settings[15] = {
 	 0x03,
 	//GPIO
      0x0C
-};
+};*/
 static uint8_t ADS1x9x_Default_Register_Settings[15] = {
 
 	//Device ID read Ony
@@ -573,8 +573,8 @@ int ads1x9x_init(struct device *dev)
   delay(50);
   ads1x9x_write_cmd (dev, SDATAC);					// SDATAC command
   delay(300);
-  ads1x9x_write_all_default_regs(dev);
-  /*
+  //ads1x9x_write_all_default_regs(dev);
+
   ads1x9x_write_reg(dev,1, 0x02); 		//Set sampling rate to 500 SPS
   //ads1x9x_write_reg(dev,1, 0x00); 		//Set sampling rate to 125 SPS
   delay(10);
@@ -601,7 +601,7 @@ int ads1x9x_init(struct device *dev)
   //ads1x9x_write_reg(dev,10, 0b00000011);		//Respiration: Calib OFF, respiration freq defaults
   delay(10);
   ads1x9x_write_reg(dev,11, 0x0c);
-  */
+
   ads1x9x_read_all_reg(dev,ads1x9xregval);
   for(u8_t i = 0;i < 12;i++)
 		printk("%02X ",ads1x9xregval[i]);

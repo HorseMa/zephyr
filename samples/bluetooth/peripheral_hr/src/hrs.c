@@ -24,10 +24,13 @@
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
 #include "hrs.h"
+#include "ecg.h"
+#include "resp.h"
 
 static struct bt_gatt_ccc_cfg hrmc_ccc_cfg[BT_GATT_CCC_MAX] = {};
 static u8_t simulate_hrm;
 static u8_t heartrate = 90;
+static u8_t resprate = 0;
 static u8_t hrs_blsc;
 extern unsigned long stepCount; /* 步数值 */
 
@@ -57,7 +60,8 @@ static struct bt_gatt_attr attrs[] = {
 };
 
 static struct bt_gatt_service hrs_svc = BT_GATT_SERVICE(attrs);
-
+u8_t ecgrawdata[2 * 10];
+static u8_t rawdatacount = 0;
 static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigger)
 {
 	struct sensor_value val[3];
@@ -79,7 +83,21 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 			return;
 		}
 		//printk("raw\n");
-		printk("%d,%d,%d\n",loop ++,val[0].val1,val[0].val2);
+		if(!(loop % 5))
+		{
+			//printk("%d,%d,%d\n",loop / 5,val[0].val1,val[0].val2);
+			ecgrawdata[rawdatacount * 2] = val[0].val1 / 0xff;
+			ecgrawdata[rawdatacount * 2 + 1] = val[0].val2 / 0xff;
+			rawdatacount ++;
+			if(rawdatacount >= 10)
+			{
+				rawdatacount = 0;
+				ecg_notify();
+			}
+		}
+		loop ++;
+
+
 	}
 	else if(trigger->chan == SENSOR_CHAN_ACCEL_Y)
 	{
@@ -87,7 +105,7 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 			printk("Cannot read ads1x9x heart channels.\n");
 			return;
 		}
-		printk("heart\n");
+		//printk("heart\n");
 		heartrate = (u8_t)val[0].val1;
 		hrs_notify();
 	}
@@ -97,7 +115,9 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 			printk("Cannot read ads1x9x resp channels.\n");
 			return;
 		}
-		printk("resp\n");
+		//printk("resp\n");
+		resprate = (u8_t)val[0].val1;
+		resp_notify(resprate);
 	}
 	else
 	{
@@ -123,7 +143,7 @@ void hrs_init(u8_t blsc)
 	trig.type = SENSOR_TRIG_DATA_READY;
 	trig.chan = SENSOR_CHAN_ACCEL_X;
 	if (sensor_trigger_set(dev, &trig, trigger_handler) < 0) {
-		printk("Gyro: cannot set trigger.\n");
+		printk("Ecg: cannot set trigger.\n");
 		return;
 	}
 	bt_gatt_service_register(&hrs_svc);
@@ -139,9 +159,9 @@ void hrs_notify(void)
 	}
 
 	//heartrate++;
-	if (heartrate == 160) {
+	/*if (heartrate == 160) {
 		heartrate = 90;
-	}
+	}*/
 
 	hrm[0] = 0x06; /* uint8, sensor contact */
 	hrm[1] = heartrate;

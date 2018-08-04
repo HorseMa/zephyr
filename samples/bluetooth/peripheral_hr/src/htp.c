@@ -21,6 +21,7 @@
 #include <bluetooth/conn.h>
 #include <bluetooth/uuid.h>
 #include <bluetooth/gatt.h>
+#include "pid.h"
 
 #define BLE_L2CAP_MTU_DEF           (23)
 #define OPCODE_LENGTH 1                                                    /**< Length of opcode inside Health Thermometer Measurement packet. */
@@ -125,43 +126,59 @@ static struct bt_gatt_attr attrs[] = {
 
 static struct bt_gatt_service htp_svc = BT_GATT_SERVICE(attrs);
 
-static void hts_sim_measurement(ble_hts_meas_t * p_meas)
+u8_t pidrawdata[20];
+static u8_t pidrawdatacount = 0;
+static int hts_sim_measurement(ble_hts_meas_t * p_meas)
 {
     static ble_date_time_t time_stamp = { 2012, 12, 5, 11, 50, 0 };
     struct sensor_value temp;
     uint32_t celciusX100;
+    static int loop = 0;
 
     if (sensor_sample_fetch(dev) < 0) {
 		printk("Sensor sample update error\n");
-		return;
+		return -1;
 	}
 
 	if (sensor_channel_get(dev, SENSOR_CHAN_AMBIENT_TEMP, &temp) < 0) {
 		printk("Cannot read MAX30205 temperature channel\n");
-		return;
+		return -1;
 	}
-    p_meas->temp_in_fahr_units = false;
-    p_meas->time_stamp_present = false;
-    p_meas->temp_type_present  = (TEMP_TYPE_AS_CHARACTERISTIC ? false : true);
-
-    celciusX100 = (uint32_t)((float)temp.val1 * MAX30205_TEMP_STEP * 100);//3700;//sensorsim_measure(&m_temp_celcius_sim_state, &m_temp_celcius_sim_cfg);
-    p_meas->temp_in_celcius.exponent = -2;
-    p_meas->temp_in_celcius.mantissa = celciusX100;
-    p_meas->temp_in_fahr.exponent    = -2;
-    p_meas->temp_in_fahr.mantissa    = (32 * 100) + ((celciusX100 * 9) / 5);
-    p_meas->time_stamp               = time_stamp;
-    p_meas->temp_type                = BLE_HTS_TEMP_TYPE_FINGER;
-
-    // update simulated time stamp
-    time_stamp.seconds += 27;
-    if (time_stamp.seconds > 59)
+    printk("%d,%d\n",loop ++,temp.val2);
+    pidrawdata[pidrawdatacount ++] = temp.val2 / 0x0f;
+    if(pidrawdatacount >= 20)
     {
-        time_stamp.seconds -= 60;
-        time_stamp.minutes++;
-        if (time_stamp.minutes > 59)
+        pidrawdatacount = 0;
+        pid_notify();
+
+        p_meas->temp_in_fahr_units = false;
+        p_meas->time_stamp_present = false;
+        p_meas->temp_type_present  = (TEMP_TYPE_AS_CHARACTERISTIC ? false : true);
+
+        celciusX100 = (uint32_t)((float)temp.val1 * MAX30205_TEMP_STEP * 100);//3700;//sensorsim_measure(&m_temp_celcius_sim_state, &m_temp_celcius_sim_cfg);
+        p_meas->temp_in_celcius.exponent = -2;
+        p_meas->temp_in_celcius.mantissa = celciusX100;
+        p_meas->temp_in_fahr.exponent    = -2;
+        p_meas->temp_in_fahr.mantissa    = (32 * 100) + ((celciusX100 * 9) / 5);
+        p_meas->time_stamp               = time_stamp;
+        p_meas->temp_type                = BLE_HTS_TEMP_TYPE_FINGER;
+
+        // update simulated time stamp
+        time_stamp.seconds += 27;
+        if (time_stamp.seconds > 59)
         {
-            time_stamp.minutes = 0;
+            time_stamp.seconds -= 60;
+            time_stamp.minutes++;
+            if (time_stamp.minutes > 59)
+            {
+                time_stamp.minutes = 0;
+            }
         }
+        return 0;
+    }
+    else
+    {
+        return -1;
     }
 }
 
@@ -252,13 +269,19 @@ void htp_notify(void)
 	uint8_t encoded_hts_meas[MAX_HTM_LEN];
     uint16_t len;
     ble_hts_meas_t simulated_meas;
+    int ret;
+
+    ret = hts_sim_measurement(&simulated_meas);
 
     /* Heartrate measurements simulation */
 	if (!simulate_hrm) {
 		return;
 	}
-
-    hts_sim_measurement(&simulated_meas);
+    if(ret < 0)
+    {
+        return;
+    }
+    //hts_sim_measurement(&simulated_meas);
     len = hts_measurement_encode(&simulated_meas, encoded_hts_meas);
 
 #if 0

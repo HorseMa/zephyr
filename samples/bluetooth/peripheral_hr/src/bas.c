@@ -154,6 +154,16 @@ void bas_notify(void)
 		.buffer_size = sizeof(m_sample_buffer),
 		.resolution  = ADC_RESOLUTION,
 	};
+	static int loop = 0;
+	if(loop != 0)
+	{
+		loop ++;
+		if(loop == 100)
+		{
+			loop = 0;
+		}
+		return;
+	}
 
 	ret = adc_read(adc_dev, &sequence);
 

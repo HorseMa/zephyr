@@ -1148,7 +1148,7 @@ static void ads1x9x_handle_interrupts(void *arg)
 	struct device *dev = (struct device *)arg;
 	long status_byte=0;
 	bool leadoff_deteted = true;
-
+	static int loop = 0;
 	//struct ads1x9x_device_data *ads1x9x = dev->driver_data;
 	//static int level = 0;
 	//level = level ^ 1;
@@ -1161,8 +1161,8 @@ static void ads1x9x_handle_interrupts(void *arg)
     if(!((LeadStatus & 0x1f) == 0 ))
     {
     	leadoff_deteted  = true;
-      	printk("lead off !!!!\n");
-      	return;
+      	//printk("lead off !!!!\n");
+      	//return;
     }
     else
     {
@@ -1174,6 +1174,17 @@ static void ads1x9x_handle_interrupts(void *arg)
 	}
 	//printk("\r\n");*/
 	ADS1x9x_Parse_data_packet();
+	if(leadoff_deteted)
+	{
+		ECGFilteredData[0] = 0;
+		ECGFilteredData[1] = 0;
+	}
+	/*if(loop % 10 == 0)
+	{
+		//printk("%d,%d,%d\n",loop/5,ECGRawData[0],ECGRawData[1]);
+		printk("%d,%d,%d\n",loop/10,ECGFilteredData[0],ECGFilteredData[1]);
+	}
+	loop ++;*/
 	ads1x9x_handle_raw_dataready_int(dev);
 	if(QRS_Heart_Rate != QRS_Heart_Rate_old)
 	{
