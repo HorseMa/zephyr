@@ -84,7 +84,7 @@ void step_init(u8_t blsc)
 
 void step_notify(void)
 {
-	static u8_t hrm[1];
+	//static u8_t hrm[1];
 	struct sensor_value intensity[3];
 
 	/* Heartrate measurements simulation */
@@ -107,9 +107,9 @@ void step_notify(void)
 	}
 	else
 	{
-		hrm[0] = stepcounts;
+		//hrm[0] = stepcounts;
 		stepcounts_old = stepcounts;
-		bt_gatt_notify(NULL, &attrs[1], &hrm, sizeof(hrm));
+		bt_gatt_notify(NULL, &attrs[1], &stepcounts, sizeof(stepcounts));
 	}
 }
 

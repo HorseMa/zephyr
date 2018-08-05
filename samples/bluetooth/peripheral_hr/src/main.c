@@ -13,6 +13,8 @@
 #include <misc/printk.h>
 #include <misc/byteorder.h>
 #include <zephyr.h>
+#include <device.h>
+#include <gpio.h>
 
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
@@ -29,6 +31,8 @@
 #include "pid.h"
 #include "resp.h"
 #include "gps.h"
+
+#define PORT      "GPIO_0"
 
 struct bt_conn *default_conn;
 
@@ -113,6 +117,15 @@ extern void detectbattary(void);
 void main(void)
 {
 	int err;
+	struct device *gpiob;
+	u32_t value;
+
+	printk("Press the user defined button on the board\n");
+	gpiob = device_get_binding(PORT);
+	if (!gpiob) {
+		printk("error\n");
+		return;
+	}
 
 	err = bt_enable(bt_ready);
 	if (err) {
@@ -134,8 +147,12 @@ void main(void)
 
 		/* Heartrate measurements simulation */
 		//hrs_notify();
-		step_notify();
-		htp_notify();
+		gpio_pin_read(gpiob, 11,&value);
+		if(value == 0)
+		{
+			step_notify();
+			htp_notify();
+		}
 		detectbattary();
 		/* Battery level simulation */
 		bas_notify();

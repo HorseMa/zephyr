@@ -81,6 +81,8 @@ void power_off(struct device *gpiob)
 	//gpio_pin_write(gpiob, 30,1);
 	gpio_pin_configure(gpiob, 13,
 			GPIO_DIR_IN); // i2c sda
+	gpio_pin_configure(gpiob, 11,
+			GPIO_DIR_IN); // GSR_LOF
 	//gpio_pin_write(gpiob, 7,1);
 	gpio_pin_configure(gpiob, KEYAPIN, GPIO_DIR_IN
 			| GPIO_PUD_PULL_UP
@@ -136,7 +138,7 @@ void button(void)
 	gpio_pin_enable_callback(gpiob, KEYBPIN);
 
 	gpio_pin_configure(gpiob, KEYGPIN,
-			   GPIO_DIR_IN | GPIO_INT |  PULL_UP | EDGE);
+			   GPIO_DIR_IN | GPIO_INT | EDGE);
 
 	gpio_init_callback(&gpio_cb_keyi2c, button_pressed, BIT(KEYGPIN));
 
