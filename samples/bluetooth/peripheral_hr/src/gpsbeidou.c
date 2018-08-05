@@ -16,6 +16,7 @@
 #include <string.h>
 #include <console.h>
 #include <unistd.h>
+#include "gps.h"
 
 /* size of stack area used by each thread */
 #define STACKSIZE 1024
@@ -25,11 +26,13 @@
 
 void gpsbeidou(void)
 {
-	#if 0
+	#if 1
 	struct device *gpio_dev;
 	unsigned char *p,*pend;
-	float lat;
-	static unsigned char tempstr[100] = {0};
+	static u8_t data2send[100] = {0};
+	static unsigned char lattempstr[20] = {0};
+	static unsigned char longtempstr[20] = {0};
+	static unsigned char startempstr[20] = {0};
 
 	gpio_dev = device_get_binding("GPIO_0");
 	__ASSERT_NO_MSG(gpio_dev != NULL);
@@ -56,26 +59,41 @@ void gpsbeidou(void)
 
 	while (1) {
 		char *s = console_getline();
-		p = strstr(s,"GGA");
+		p = strstr(s,"GNGGA");
 		if(p)
 		{
-			printk("got one!!!\n");
-			memset(tempstr,0,100);
+			//printk("got one!!!\n");
+			memset(lattempstr,0,20);
 			p = strstr(p,",");
 			p = strstr(p + 1,",");
 			pend = strstr(p + 1,",");
-			memcpy(tempstr,p + 1,pend - p - 1);
-			printk("%s\n",tempstr);
+			memcpy(lattempstr,p + 1,pend - p - 1);
+			//printk("%s\n",lattempstr);
 			//lat = atof(p + 1);
 			//atoi()
 			//sscanf(tempstr,"%f",&lat);	// 纬度
 			//printk("lat = %f\n",lat);
-			memset(tempstr,0,100);
+			memset(longtempstr,0,20);
 			p = strstr(pend + 1,",");
 			p = p + 1;
 			pend = strstr(p,",");
-			memcpy(tempstr,p,pend - p); // 经度
-			printk("%s\n",tempstr);
+			memcpy(longtempstr,p,pend - p); // 经度
+			printk("%s\n",longtempstr);
+			p = strstr(pend + 1,",");
+			p = strstr(p + 1,",");
+			pend = strstr(p + 1,",");
+			memset(startempstr,0,20);
+			memcpy(startempstr,p + 1,pend - p - 1); // 卫星个数
+			//printk("star count : %s\n",startempstr);
+
+			memset(data2send,0,100);
+			strcat(data2send,startempstr);
+			strcat(data2send,",");
+			strcat(data2send,lattempstr);
+			strcat(data2send,",");
+			strcat(data2send,longtempstr);
+			//printk("%s\n",data2send);
+			gps_notify(data2send);
 		}
 	}
 	#endif

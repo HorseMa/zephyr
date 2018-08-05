@@ -69,15 +69,15 @@ void gps_init(u8_t blsc)
 	}
 }
 
-void gps_notify(void)
+void gps_notify(char *data)
 {
-	static u8_t location[100] = {0};
+	//static u8_t location[100] = {0};
 	/* Gps measurements simulation */
 	if (!simulate_hrm) {
 		return;
 	}
-	memset(location,0,100);
-	strcpy(location,"38.6518,104.07642");
-	bt_gatt_notify(NULL, &attrs[1], &location, strlen(location));
+	//memset(location,0,100);
+	//strcpy(location,"38.6518,104.07642");
+	bt_gatt_notify(NULL, &attrs[1], data, strlen(data));
 }
 

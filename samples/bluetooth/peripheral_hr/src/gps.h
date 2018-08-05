@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 void gps_init(u8_t blsc);
-void gps_notify(void);
+void gps_notify(char *data);
 
 #ifdef __cplusplus
 }
