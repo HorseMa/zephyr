@@ -69,7 +69,7 @@ void ecg_init(u8_t blsc)
 	}
 }
 
-extern u8_t ecgrawdata[];
+extern u16_t ecgrawdata[];
 void ecg_notify(void)
 {
 	/* Heartrate measurements simulation */
@@ -77,6 +77,6 @@ void ecg_notify(void)
 		return;
 	}
 
-	bt_gatt_notify(NULL, &attrs[1], &ecgrawdata, 2 * 20);
+	bt_gatt_notify(NULL, &attrs[1], &ecgrawdata, 2 * 2 * 10);
 }
 

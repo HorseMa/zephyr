@@ -126,7 +126,7 @@ static struct bt_gatt_attr attrs[] = {
 
 static struct bt_gatt_service htp_svc = BT_GATT_SERVICE(attrs);
 
-u8_t pidrawdata[20];
+u16_t pidrawdata[20];
 static u8_t pidrawdatacount = 0;
 static int hts_sim_measurement(ble_hts_meas_t * p_meas)
 {
@@ -145,7 +145,7 @@ static int hts_sim_measurement(ble_hts_meas_t * p_meas)
 		return -1;
 	}
     //printk("%d,%d\n",loop ++,temp.val2);
-    pidrawdata[pidrawdatacount ++] = temp.val2 / 0x0f;
+    pidrawdata[pidrawdatacount ++] = temp.val2;
     if(pidrawdatacount >= 20)
     {
         pidrawdatacount = 0;

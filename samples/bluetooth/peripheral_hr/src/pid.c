@@ -77,6 +77,6 @@ void pid_notify(void)
 		return;
 	}
 
-	bt_gatt_notify(NULL, &attrs[1], &pidrawdata, 20);
+	bt_gatt_notify(NULL, &attrs[1], &pidrawdata, 20 * 2);
 }
 
