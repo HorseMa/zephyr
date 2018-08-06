@@ -191,7 +191,7 @@ static void insert_char(char *pos, char c, u8_t end)
 	char tmp;
 
 	/* Echo back to console */
-	uart_poll_out(uart_console_dev, c);
+	//uart_poll_out(uart_console_dev, c);
 
 	if (end == 0) {
 		*pos = c;
@@ -204,7 +204,7 @@ static void insert_char(char *pos, char c, u8_t end)
 	cursor_save();
 
 	while (end-- > 0) {
-		uart_poll_out(uart_console_dev, tmp);
+		//uart_poll_out(uart_console_dev, tmp);
 		c = *pos;
 		*(pos++) = tmp;
 		tmp = c;
@@ -520,7 +520,7 @@ void uart_console_isr(struct device *unused)
 			case BS:
 			case DEL:
 				if (cur > 0) {
-					del_char(&cmd->line[--cur], end);
+					//del_char(&cmd->line[--cur], end);
 				}
 				break;
 			case ESC:
@@ -528,8 +528,8 @@ void uart_console_isr(struct device *unused)
 				break;
 			case '\r':
 				cmd->line[cur + end] = '\0';
-				uart_poll_out(uart_console_dev, '\r');
-				uart_poll_out(uart_console_dev, '\n');
+				//uart_poll_out(uart_console_dev, '\r');
+				//uart_poll_out(uart_console_dev, '\n');
 				cur = 0;
 				end = 0;
 				k_fifo_put(lines_queue, cmd);

@@ -26,15 +26,15 @@
 
 void gpsbeidou(void)
 {
-	#if 0
-	struct device *gpio_dev;
+	#if 1
+	//struct device *gpio_dev;
 	unsigned char *p,*pend;
 	static u8_t data2send[100] = {0};
 	static unsigned char lattempstr[20] = {0};
 	static unsigned char longtempstr[20] = {0};
 	static unsigned char startempstr[20] = {0};
 
-	gpio_dev = device_get_binding("GPIO_0");
+	/*gpio_dev = device_get_binding("GPIO_0");
 	__ASSERT_NO_MSG(gpio_dev != NULL);
 
 	gpio_pin_configure(gpio_dev, 14,
@@ -52,10 +52,10 @@ void gpsbeidou(void)
 		{
 			k_sleep(200);
 		}
-	}
+	}*/
 
 	console_getline_init();
-	gpio_pin_write(gpio_dev, 17,1);
+	//gpio_pin_write(gpio_dev, 17,1);
 
 	while (1) {
 		char *s = console_getline();
@@ -78,7 +78,7 @@ void gpsbeidou(void)
 			p = p + 1;
 			pend = strstr(p,",");
 			memcpy(longtempstr,p,pend - p); // 经度
-			printk("%s\n",longtempstr);
+			//printk("%s\n",longtempstr);
 			p = strstr(pend + 1,",");
 			p = strstr(p + 1,",");
 			pend = strstr(p + 1,",");

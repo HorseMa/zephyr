@@ -34,8 +34,8 @@
 #define HTS_MEAS_FLAG_TIME_STAMP_BIT (0x01 << 1)  /**< Time Stamp flag. */
 #define HTS_MEAS_FLAG_TEMP_TYPE_BIT  (0x01 << 2)  /**< Temperature Type flag. */
 
-#define BLE_UUID_HEALTH_THERMOMETER_SERVICE                      BT_UUID_DECLARE_16(0x1809)     /**< Health Thermometer service UUID. */
-#define BLE_UUID_TEMPERATURE_MEASUREMENT_CHAR                    BT_UUID_DECLARE_16(0x2A1C)     /**< Temperature Measurement characteristic UUID. */
+#define BLE_UUID_HEALTH_THERMOMETER_SERVICE                      BT_UUID_DECLARE_128(0x00, 0x00, 0x8B, 0x98, 0x42, 0xC2, 0x34, 0xA0,0x5C, 0x46, 0x84, 0x38, 0x22, 0x11, 0x86, 0x75) //BT_UUID_DECLARE_16(0x1809)     /**< Health Thermometer service UUID. */
+#define BLE_UUID_TEMPERATURE_MEASUREMENT_CHAR                    BT_UUID_DECLARE_128(0x00, 0x00, 0x8B, 0x98, 0x42, 0xC2, 0x34, 0xA0,0x5C, 0x46, 0x84, 0x38, 0x23, 0x11, 0x86, 0x75)//BT_UUID_DECLARE_16(0x2A1C)     /**< Temperature Measurement characteristic UUID. */
 #define BLE_UUID_TEMPERATURE_TYPE_CHAR                           BT_UUID_DECLARE_16(0x2A1D)     /**< Temperature Type characteristic UUID. */
 #define TEMP_TYPE_AS_CHARACTERISTIC     0                                           /**< Determines if temperature type is given as characteristic (1) or as a field of measurement (0). */
 // Temperature Type measurement locations
@@ -84,8 +84,9 @@ static u8_t simulate_hrm;
 static u8_t htp_blsc;
 static struct device *dev;
 extern unsigned long stepCount; /* 步数值 */
+static uint32_t celciusX100;
 
-static uint8_t uint16_encode(uint16_t value, uint8_t * p_encoded_data)
+/*static uint8_t uint16_encode(uint16_t value, uint8_t * p_encoded_data)
 {
     p_encoded_data[0] = (uint8_t) ((value & 0x00FF) >> 0);
     p_encoded_data[1] = (uint8_t) ((value & 0xFF00) >> 8);
@@ -99,7 +100,7 @@ static uint8_t uint32_encode(uint32_t value, uint8_t * p_encoded_data)
     p_encoded_data[2] = (uint8_t) ((value & 0x00FF0000) >> 16);
     p_encoded_data[3] = (uint8_t) ((value & 0xFF000000) >> 24);
     return sizeof(uint32_t);
-}
+}*/
 
 static void hrmc_ccc_cfg_changed(const struct bt_gatt_attr *attr,
 				 u16_t value)
@@ -130,10 +131,9 @@ u16_t pidrawdata[20];
 static u8_t pidrawdatacount = 0;
 static int hts_sim_measurement(ble_hts_meas_t * p_meas)
 {
-    static ble_date_time_t time_stamp = { 2012, 12, 5, 11, 50, 0 };
+    //static ble_date_time_t time_stamp = { 2012, 12, 5, 11, 50, 0 };
     struct sensor_value temp;
-    uint32_t celciusX100;
-    static int loop = 0;
+    //static int loop = 0;
 
     if (sensor_sample_fetch(dev) < 0) {
 		printk("Sensor sample update error\n");
@@ -156,7 +156,7 @@ static int hts_sim_measurement(ble_hts_meas_t * p_meas)
         p_meas->temp_type_present  = (TEMP_TYPE_AS_CHARACTERISTIC ? false : true);
 
         celciusX100 = (uint32_t)((float)temp.val1 * MAX30205_TEMP_STEP * 100);//3700;//sensorsim_measure(&m_temp_celcius_sim_state, &m_temp_celcius_sim_cfg);
-        p_meas->temp_in_celcius.exponent = -2;
+        /*p_meas->temp_in_celcius.exponent = -2;
         p_meas->temp_in_celcius.mantissa = celciusX100;
         p_meas->temp_in_fahr.exponent    = -2;
         p_meas->temp_in_fahr.mantissa    = (32 * 100) + ((celciusX100 * 9) / 5);
@@ -173,7 +173,7 @@ static int hts_sim_measurement(ble_hts_meas_t * p_meas)
             {
                 time_stamp.minutes = 0;
             }
-        }
+        }*/
         return 0;
     }
     else
@@ -182,6 +182,7 @@ static int hts_sim_measurement(ble_hts_meas_t * p_meas)
     }
 }
 
+#if 0
 static uint8_t ble_date_time_encode(const ble_date_time_t * p_date_time,
                                              uint8_t *               p_encoded_data)
 {
@@ -249,6 +250,7 @@ static uint8_t hts_measurement_encode(ble_hts_meas_t * p_hts_meas,
 
     return len;
 }
+#endif
 
 void htp_init(u8_t blsc)
 {
@@ -266,8 +268,8 @@ void htp_init(u8_t blsc)
 
 void htp_notify(void)
 {
-	uint8_t encoded_hts_meas[MAX_HTM_LEN];
-    uint16_t len;
+	/*uint8_t encoded_hts_meas[MAX_HTM_LEN];
+    uint16_t len;*/
     ble_hts_meas_t simulated_meas;
     int ret;
 
@@ -282,7 +284,7 @@ void htp_notify(void)
         return;
     }
     //hts_sim_measurement(&simulated_meas);
-    len = hts_measurement_encode(&simulated_meas, encoded_hts_meas);
+    //len = hts_measurement_encode(&simulated_meas, encoded_hts_meas);
 
 #if 0
 	hrm[0] = 0xf8; /* uint8, sensor contact */
@@ -291,5 +293,5 @@ void htp_notify(void)
 	hrm[3] = tempinc.btemperature[1];
 	hrm[4] = tempinc.btemperature[0];
 #endif
-	bt_gatt_notify(NULL, &attrs[1], encoded_hts_meas, len);
+	bt_gatt_notify(NULL, &attrs[1], &celciusX100, sizeof(celciusX100));
 }

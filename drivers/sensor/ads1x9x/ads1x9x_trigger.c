@@ -1148,7 +1148,7 @@ static void ads1x9x_handle_interrupts(void *arg)
 	struct device *dev = (struct device *)arg;
 	long status_byte=0;
 	bool leadoff_deteted = true;
-	static int loop = 0;
+	//static int loop = 0;
 	//struct ads1x9x_device_data *ads1x9x = dev->driver_data;
 	//static int level = 0;
 	//level = level ^ 1;
