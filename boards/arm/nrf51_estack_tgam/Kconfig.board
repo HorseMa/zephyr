@@ -1,0 +1,10 @@
+# Kconfig - nRF51 ESTACK_TGAM board configuration
+#
+# Copyright (c) 2016 Linaro Limited.
+#
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_NRF51_ESTACK_TGAM
+	bool "nRF51 ESTACK_TGAM"
+	select HAS_DTS_I2C
+	depends on SOC_NRF51822_QFAC

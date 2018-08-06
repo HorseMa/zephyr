@@ -1,0 +1,10 @@
+identifier: nrf51_estack_tgam
+name: nRF51-ESTACK_TGAM
+type: mcu
+arch: arm
+toolchain:
+  - zephyr
+  - gccarmemb
+ram: 32
+supported:
+  - ble

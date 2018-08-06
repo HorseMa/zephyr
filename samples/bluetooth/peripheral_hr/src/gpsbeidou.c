@@ -26,7 +26,7 @@
 
 void gpsbeidou(void)
 {
-	#if 1
+	#if 0
 	struct device *gpio_dev;
 	unsigned char *p,*pend;
 	static u8_t data2send[100] = {0};
