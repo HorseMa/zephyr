@@ -69,7 +69,7 @@ void pid_init(u8_t blsc)
 	}
 }
 
-extern u8_t pidrawdata[];
+extern u16_t pidrawdata[];
 void pid_notify(void)
 {
 	/* Heartrate measurements simulation */

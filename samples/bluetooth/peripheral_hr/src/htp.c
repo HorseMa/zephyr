@@ -34,8 +34,8 @@
 #define HTS_MEAS_FLAG_TIME_STAMP_BIT (0x01 << 1)  /**< Time Stamp flag. */
 #define HTS_MEAS_FLAG_TEMP_TYPE_BIT  (0x01 << 2)  /**< Temperature Type flag. */
 
-#define BLE_UUID_HEALTH_THERMOMETER_SERVICE                      BT_UUID_DECLARE_128(0x00, 0x00, 0x8B, 0x98, 0x42, 0xC2, 0x34, 0xA0,0x5C, 0x46, 0x84, 0x38, 0x22, 0x11, 0x86, 0x75) //BT_UUID_DECLARE_16(0x1809)     /**< Health Thermometer service UUID. */
-#define BLE_UUID_TEMPERATURE_MEASUREMENT_CHAR                    BT_UUID_DECLARE_128(0x00, 0x00, 0x8B, 0x98, 0x42, 0xC2, 0x34, 0xA0,0x5C, 0x46, 0x84, 0x38, 0x23, 0x11, 0x86, 0x75)//BT_UUID_DECLARE_16(0x2A1C)     /**< Temperature Measurement characteristic UUID. */
+#define BLE_UUID_HEALTH_THERMOMETER_SERVICE                      BT_UUID_DECLARE_16(0x1809)     /**< Health Thermometer service UUID. */
+#define BLE_UUID_TEMPERATURE_MEASUREMENT_CHAR                    BT_UUID_DECLARE_16(0x2A1C)     /**< Temperature Measurement characteristic UUID. */
 #define BLE_UUID_TEMPERATURE_TYPE_CHAR                           BT_UUID_DECLARE_16(0x2A1D)     /**< Temperature Type characteristic UUID. */
 #define TEMP_TYPE_AS_CHARACTERISTIC     0                                           /**< Determines if temperature type is given as characteristic (1) or as a field of measurement (0). */
 // Temperature Type measurement locations

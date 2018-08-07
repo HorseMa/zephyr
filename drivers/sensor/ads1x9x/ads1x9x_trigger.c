@@ -1186,10 +1186,18 @@ static void ads1x9x_handle_interrupts(void *arg)
 	}
 	loop ++;*/
 	ads1x9x_handle_raw_dataready_int(dev);
+	if(QRS_Heart_Rate > 100)
+	{
+		QRS_Heart_Rate *= 0.7;
+	}
 	if(QRS_Heart_Rate != QRS_Heart_Rate_old)
 	{
 		ads1x9x_handle_heart_rate_dataready_int(dev);
 		QRS_Heart_Rate_old = QRS_Heart_Rate;
+	}
+	if(Respiration_Rate > 40)
+	{
+		Respiration_Rate *= 0.5;
 	}
 	if(Respiration_Rate != Respiration_Rate_old)
 	{

@@ -60,7 +60,7 @@ static struct bt_gatt_attr attrs[] = {
 };
 
 static struct bt_gatt_service hrs_svc = BT_GATT_SERVICE(attrs);
-u16_t ecgrawdata[2 * 10];
+int16_t ecgrawdata[2 * 10];
 static u8_t rawdatacount = 0;
 static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigger)
 {
@@ -85,9 +85,10 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 		//printk("raw\n");
 		if(!(loop ++ % 5))
 		{
-			printk("%d,%d,%d\n",loop,val[0].val1,val[0].val2);
-			ecgrawdata[rawdatacount * 2 + 0] = val[0].val1;
-			ecgrawdata[rawdatacount * 2 + 1] = val[0].val2;
+			ecgrawdata[rawdatacount * 2 + 0] = (int16_t)val[0].val1;
+			ecgrawdata[rawdatacount * 2 + 1] = (int16_t)val[0].val2;
+			printk("%d,%d,%d\n",1,ecgrawdata[rawdatacount * 2 + 0],ecgrawdata[rawdatacount * 2 + 1]);
+			//printk("%d,%d,%d\n",loop / 5,val[0].val1,val[0].val2);
 			rawdatacount ++;
 			if(rawdatacount >= 10)
 			{
