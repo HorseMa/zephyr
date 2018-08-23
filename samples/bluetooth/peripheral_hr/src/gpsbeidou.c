@@ -12,6 +12,7 @@
 #include <sensor.h>
 #include <device.h>
 #include "mymath.h"
+#include <stdlib.h>
 #include <math.h>
 #include <string.h>
 #include <console.h>
@@ -23,6 +24,8 @@
 
 /* scheduling priority used by each thread */
 #define PRIORITY 7
+
+extern bool gps_work_flag;
 
 void gpsbeidou(void)
 {
@@ -58,6 +61,7 @@ void gpsbeidou(void)
 	//gpio_pin_write(gpio_dev, 17,1);
 
 	while (1) {
+		int startcount = 0;
 		char *s = console_getline();
 		p = strstr(s,"GNGGA");
 		if(p)
@@ -85,7 +89,15 @@ void gpsbeidou(void)
 			memset(startempstr,0,20);
 			memcpy(startempstr,p + 1,pend - p - 1); // 卫星个数
 			//printk("star count : %s\n",startempstr);
-
+			startcount = atoi(startempstr);
+			if(startcount > 3)
+			{
+				gps_work_flag = true;
+			}
+			else
+			{
+				gps_work_flag = false;
+			}
 			memset(data2send,0,100);
 			strcat(data2send,startempstr);
 			strcat(data2send,",");

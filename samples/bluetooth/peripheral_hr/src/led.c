@@ -44,6 +44,9 @@ struct printk_data_t {
 	u32_t led;
 	u32_t cnt;
 };
+bool bt_connect_flag = false;
+bool gps_work_flag = false;
+bool ecg_lead_flag = false;
 
 K_FIFO_DEFINE(printk_fifo);
 
@@ -59,15 +62,28 @@ void blink(const char *port, u32_t sleep_ms, u32_t led, u32_t id)
 
 	while (1) {
 		gpio_pin_write(gpio_dev, led, cnt % 2);
-
-		k_sleep(sleep_ms);
+		if(cnt % 2)
+		{
+			k_sleep(100);
+		}
+		else
+		{
+			if(((bt_connect_flag) && (led == LED0)) || ((gps_work_flag) && (led == LED1)) || ((ecg_lead_flag) && (led == LED2)))
+			{
+				k_sleep(sleep_ms * 2);
+			}
+			else
+			{
+				k_sleep(sleep_ms);
+			}
+		}
 		cnt++;
 	}
 }
 
 void blink1(void)
 {
-	blink(PORT0, 100, LED0, 0);
+	blink(PORT0, 1000, LED0, 0);
 }
 
 void blink2(void)
@@ -77,7 +93,7 @@ void blink2(void)
 
 void blink3(void)
 {
-	blink(PORT2, 500, LED2, 2);
+	blink(PORT2, 1000, LED2, 2);
 }
 
 K_THREAD_DEFINE(blink1_id, STACKSIZE, blink1, NULL, NULL, NULL,

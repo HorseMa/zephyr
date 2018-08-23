@@ -35,6 +35,7 @@
 #define PORT      "GPIO_0"
 
 struct bt_conn *default_conn;
+extern bool bt_connect_flag;
 
 static const struct bt_data ad[] = {
 	BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -48,6 +49,7 @@ static void connected(struct bt_conn *conn, u8_t err)
 	} else {
 		default_conn = bt_conn_ref(conn);
 		printk("Connected\n");
+		bt_connect_flag = true;
 	}
 }
 
@@ -58,6 +60,7 @@ static void disconnected(struct bt_conn *conn, u8_t reason)
 	if (default_conn) {
 		bt_conn_unref(default_conn);
 		default_conn = NULL;
+		bt_connect_flag =  false;
 	}
 }
 
@@ -147,8 +150,8 @@ void main(void)
 
 		/* Heartrate measurements simulation */
 		//hrs_notify();
-		gpio_pin_read(gpiob, 11,&value);
-		if(value == 0)
+		gpio_pin_read(gpiob, 9,&value);
+		if(value == 1)
 		{
 			step_notify();
 			htp_notify();

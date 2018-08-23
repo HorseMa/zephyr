@@ -439,13 +439,13 @@ static int gpio_nrf5_P0_init(struct device *dev)
 {
 	gpio_nrf5_init(dev);
 	gpio_nrf5_config(dev,
-			    GPIO_ACCESS_BY_PIN, 9, GPIO_DIR_OUT);
-	gpio_nrf5_write(dev,
-			   GPIO_ACCESS_BY_PIN, 9, 1);
-	gpio_nrf5_config(dev,
 			    GPIO_ACCESS_BY_PIN, 8, GPIO_DIR_OUT);
 	gpio_nrf5_write(dev,
 			   GPIO_ACCESS_BY_PIN, 8, 1);
+	gpio_nrf5_config(dev,
+			    GPIO_ACCESS_BY_PIN, 24, GPIO_DIR_OUT);
+	gpio_nrf5_write(dev,
+			   GPIO_ACCESS_BY_PIN, 24, 1);
 	return 0;
 }
 

@@ -13,9 +13,9 @@
 #define PRIORITY 7
 
 #define PORT      "GPIO_0"
-#define KEYAPIN       21
-#define KEYBPIN       01
-#define KEYGPIN       11
+#define KEYAPIN       01
+#define KEYBPIN       00
+#define KEYGPIN       9
 
 /* Sleep time */
 #define SLEEP_TIME	500
@@ -33,40 +33,45 @@ static void _system_off(void)
 
 void power_off(struct device *gpiob)
 {
-	gpio_pin_configure(gpiob, 10,
+	u32_t value;
+
+	gpio_pin_configure(gpiob, 23,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 10, 1); // buzzer
-	k_busy_wait(500000);
-	gpio_pin_configure(gpiob, 10,
+	gpio_pin_write(gpiob, 23, 1); // buzzer
+	do{
+		k_busy_wait(100000);
+		gpio_pin_read(gpiob, KEYAPIN,&value);
+	}while(value == 0);
+	gpio_pin_configure(gpiob, 23,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 10, 0); // buzzer
-	gpio_pin_configure(gpiob, 9,
-			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 9, 0); // LDO
+	gpio_pin_write(gpiob, 23, 0); // buzzer
 	gpio_pin_configure(gpiob, 8,
 			GPIO_DIR_OUT);
 	gpio_pin_write(gpiob, 8, 0); // LDO
-	gpio_pin_configure(gpiob, 22,
-			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 22, 0); // LED0
-	gpio_pin_configure(gpiob, 23,
-			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 23, 0); // LED1
 	gpio_pin_configure(gpiob, 24,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 24, 0); // LED2
-	gpio_pin_configure(gpiob, 14,
+	gpio_pin_write(gpiob, 24, 0); // LDO
+	gpio_pin_configure(gpiob, 25,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 14, 0); // ads start pin
-	gpio_pin_configure(gpiob, 15,
+	gpio_pin_write(gpiob, 25, 0); // LED0
+	gpio_pin_configure(gpiob, 28,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 15, 0); // ads reset pin
-	gpio_pin_configure(gpiob, 20,
+	gpio_pin_write(gpiob, 28, 0); // LED1
+	gpio_pin_configure(gpiob, 29,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 20, 0); // ads ready pin
-	gpio_pin_configure(gpiob, 16,
+	gpio_pin_write(gpiob, 29, 0); // LED2
+	gpio_pin_configure(gpiob, CONFIG_ADS1X9X_START_GPIO_PIN_NUM,
 			GPIO_DIR_OUT);
-	gpio_pin_write(gpiob, 16, 0); // ads cs pin
+	gpio_pin_write(gpiob, CONFIG_ADS1X9X_START_GPIO_PIN_NUM, 0); // ads start pin
+	gpio_pin_configure(gpiob, CONFIG_ADS1X9X_RESET_GPIO_PIN_NUM,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, CONFIG_ADS1X9X_RESET_GPIO_PIN_NUM, 0); // ads reset pin
+	gpio_pin_configure(gpiob, CONFIG_ADS1X9X_READY_GPIO_PIN_NUM,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, CONFIG_ADS1X9X_READY_GPIO_PIN_NUM, 0); // ads ready pin
+	gpio_pin_configure(gpiob, CONFIG_ADS1X9X_SLAVE,
+			GPIO_DIR_OUT);
+	gpio_pin_write(gpiob, CONFIG_ADS1X9X_SLAVE, 0); // ads cs pin
 	gpio_pin_configure(gpiob, 17,
 			GPIO_DIR_OUT); // ads mosi
 	gpio_pin_write(gpiob, 17,0);
@@ -76,12 +81,12 @@ void power_off(struct device *gpiob)
 	gpio_pin_configure(gpiob, 18,
 			GPIO_DIR_OUT); // ads sclk
 	gpio_pin_write(gpiob, 18,0);
-	gpio_pin_configure(gpiob, 12,
+	gpio_pin_configure(gpiob, 10,
 			GPIO_DIR_IN); // i2c sda
 	//gpio_pin_write(gpiob, 30,1);
-	gpio_pin_configure(gpiob, 13,
-			GPIO_DIR_IN); // i2c sda
 	gpio_pin_configure(gpiob, 11,
+			GPIO_DIR_IN); // i2c scl
+	gpio_pin_configure(gpiob, KEYGPIN,
 			GPIO_DIR_IN); // GSR_LOF
 	//gpio_pin_write(gpiob, 7,1);
 	gpio_pin_configure(gpiob, KEYAPIN, GPIO_DIR_IN

@@ -37,8 +37,8 @@
 #define ADC_GAIN		ADC_GAIN_1_3
 #define ADC_REFERENCE		ADC_REF_INTERNAL
 #define ADC_ACQUISITION_TIME	ADC_ACQ_TIME_DEFAULT
-#define ADC_CHANNEL_0_INPUT	NRF_ADC_CONFIG_INPUT_3
-#define ADC_CHANNEL_2_INPUT	NRF_ADC_CONFIG_INPUT_3
+#define ADC_CHANNEL_0_INPUT	NRF_ADC_CONFIG_INPUT_7
+#define ADC_CHANNEL_2_INPUT	NRF_ADC_CONFIG_INPUT_7
 
 #elif defined(CONFIG_BOARD_NRF52_PCA10040) || \
       defined(CONFIG_BOARD_NRF52840_PCA10056)
@@ -191,15 +191,15 @@ void detectbattary(void)
 		{
 			// 低电量报警
 			alarm_flag = true;
-			gpio_pin_configure(gpiob, 10,
+			gpio_pin_configure(gpiob, 23,
 			GPIO_DIR_OUT);
-			gpio_pin_write(gpiob, 10, 1); // buzzer
+			gpio_pin_write(gpiob, 23, 1); // buzzer
 			k_busy_wait(200000);
-			gpio_pin_write(gpiob, 10, 0); // buzzer
+			gpio_pin_write(gpiob, 23, 0); // buzzer
 			k_busy_wait(200000);
-			gpio_pin_write(gpiob, 10, 1); // buzzer
+			gpio_pin_write(gpiob, 23, 1); // buzzer
 			k_busy_wait(2000000);
-			gpio_pin_write(gpiob, 10, 0); // buzzer
+			gpio_pin_write(gpiob, 23, 0); // buzzer
 		}
 	}
 }
