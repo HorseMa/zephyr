@@ -63,6 +63,7 @@ void gpsbeidou(void)
 	while (1) {
 		int startcount = 0;
 		char *s = console_getline();
+		//printk("%s\r\n",s);
 		p = strstr(s,"GNGGA");
 		if(p)
 		{

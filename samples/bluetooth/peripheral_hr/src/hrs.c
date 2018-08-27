@@ -87,7 +87,7 @@ static void trigger_handler(struct device *ads1x9x, struct sensor_trigger *trigg
 		{
 			ecgrawdata[rawdatacount * 2 + 0] = (int16_t)val[0].val1;
 			ecgrawdata[rawdatacount * 2 + 1] = (int16_t)val[0].val2;
-			printk("%d,%d,%d\n",1,ecgrawdata[rawdatacount * 2 + 0],ecgrawdata[rawdatacount * 2 + 1]);
+			//printk("%d,%d,%d\n",1,ecgrawdata[rawdatacount * 2 + 0],ecgrawdata[rawdatacount * 2 + 1]);
 			//printk("%d,%d,%d\n",loop / 5,val[0].val1,val[0].val2);
 			rawdatacount ++;
 			if(rawdatacount >= 10)
